@@ -2,7 +2,7 @@
 title: Disk Analysis & Autopsy Write-Up | TryHackMe
 date: 2022-06-24 00:00:00 +530
 categories: [ Write Up, TryHackMe]
-tags: [Write Up, TryHackMe, CTF]     # TAG names should always be lowercase
+tags: [Write Up, TryHackMe, CTF, Blue Team]     # TAG names should always be lowercase
 ---
 ![Heading Image](/assets/img/thm/diskanalysis/head.png)
 

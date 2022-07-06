@@ -23,7 +23,7 @@ timezone: Asia/Kolkata
 
 title: Utkar5hM                          # the main title
 
-tagline: Blog / notes   # it will display as the sub-title
+tagline: Blog / notes / Writeups  # it will display as the sub-title
 
 description: >-                        # used by seo meta and the atom feed
   A minimal, responsive, and powerful Jekyll theme for presenting professional writing.
