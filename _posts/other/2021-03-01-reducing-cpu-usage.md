@@ -1,7 +1,7 @@
 ---
 title: Reducing cpu Usage in Windows | Guide
 date: 2021-03-01 00:00:00 +530
-categories: [ Guide]
+categories: [Guides]
 tags: [Guide, Windows, Tweaks, Gaming, Performance]     # TAG names should always be lowercase
 ---
 
