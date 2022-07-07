@@ -20,11 +20,15 @@
 #   type: mastodon
 #   icon: 'fab fa-mastodon'   # icons powered by <https://fontawesome.com/>
 #   url:  ''                  # Fill with your mastodon account page
+#-
+#   type: linkedin
+#   icon: 'fab fa-linkedin'   # icons powered by <https://fontawesome.com/>
+#   url:  'https://www.linkedin.com/in/utkar5hm/'                  # Fill with your Linkedin homepage
 -
-   type: linkedin
-   icon: 'fab fa-linkedin'   # icons powered by <https://fontawesome.com/>
-   url:  'https://www.linkedin.com/in/utkar5hm/'                  # Fill with your Linkedin homepage
+   type: facebook
+   icon: 'fab fa-facebook-f'
+   url:  'https://www.facebook.com/utkar5hM/'                  # Fill with your stackoverflow homepage
 -
-   type: stack-overflow
+   type: portfolio
    icon: 'fas fa-user'
    url:  'https://utkar5hm.tk/'                  # Fill with your stackoverflow homepage
