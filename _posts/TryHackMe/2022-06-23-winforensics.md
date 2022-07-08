@@ -1,8 +1,8 @@
 ---
 title: Windows Forensics 1 Write-up | TryHackMe
 date: 2022-06-23 00:00:00 +530
-categories: [ Write Up, TryHackMe]
-tags: [Write Up, TryHackMe, CTF, Blue Team]     # TAG names should always be lowercase
+categories: [Write Up, TryHackMe]
+tags: [write up, tryhackme, ctf, blue team] # TAG names should always be lowercase
 ---
 
 ![screenshot](/assets/img/thm/winforensics/head.png)
@@ -14,6 +14,7 @@ connecting via rdp:
 ```shell
 xfreerdp /u:THM-4n6 /p:123 /v:10.10.52.134 /cert:ignore /workarea
 ```
+
 After opening Registry explorer, Loading the SAM files from:
 
 ```
@@ -39,6 +40,7 @@ What’s the password hint for the user THM-4n6?
 ```
 count
 ```
+
 loading the NTUSER.DAT for the THM-4n6 and looking in the `NTUSER.DAT\Software\Microsoft\Windows\CurrentVersion\Explorer\RecentDocs`.
 
 ![screenshot](/assets/img/thm/winforensics/2.png)
