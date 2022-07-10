@@ -1,5 +1,5 @@
 ---
-title: Gatekeeper WriteUp | TryHackMe
+title: Gatekeeper Write-up | TryHackMe
 date: 2022-06-13 00:00:00 +530
 categories: [Write Up, TryHackMe]
 tags: [write up, tryhackme, ctf, medium, red team] # TAG names should always be lowercase

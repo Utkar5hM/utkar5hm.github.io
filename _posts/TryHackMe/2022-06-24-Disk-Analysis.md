@@ -1,5 +1,5 @@
 ---
-title: Disk Analysis & Autopsy Write-Up | TryHackMe
+title: Disk Analysis & Autopsy Write-up | TryHackMe
 date: 2022-06-24 00:00:00 +530
 categories: [Write Up, TryHackMe]
 tags: [write up, tryhackme, ctf, blue team] # TAG names should always be lowercase
