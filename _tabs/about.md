@@ -4,8 +4,8 @@ icon: fas fa-info-circle
 order: 4
 ---
 
-<h1 align="center">Hi 👋, I'm Utkar5h & I've N0 1de4 0f wtf 1'm d01ng</h1>
-<h3 align="center">x-0 pent3ster/devel0per @ n1ght \ n4rc0l3pt1c b0t @ d4y</h3>
+<h1 align="center">Hi 👋, I'm Utkar5h</h1>
+<h3 align="center">pent3ster/devel0per @ n1ght \ n4rc0l3pt1c b0t @ d4y</h3>
 
 
 - 🌱 I’m currently learning **Malware Analysis, Reverse Engineering, Penetration Testing.**
