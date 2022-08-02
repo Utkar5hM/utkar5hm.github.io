@@ -5,14 +5,14 @@ order: 4
 ---
 
 <h1 align="center">Hi 👋, I'm Utkar5h</h1>
-<h3 align="center">pent3ster/devel0per @ n1ght \ n4rc0l3pt1c b0t @ d4y</h3>
+<h3 align="center">pent3ster / devel0per</h3>
 
 
 - 🌱 I’m currently learning **Malware Analysis, Reverse Engineering, Penetration Testing.**
 
 - 📝 Visit my site at [utkar5hm.tk](https://utkar5hm.tk)
 
-- 💬 Ask me about **C++, Js, Assembly(x86_64,ARM,MIPS), MEN Stack, Arch l1nux**
+- 💬 Ask me about **C++, Js, Assembly(x86_64,ARM,MIPS), MEN Stack, Arch**
 
 - 📄 Know about my experiences: [Re$uM3](https://drive.google.com/drive/folders/1h34oaLfqFc5VKA0_lWYup3R-gTgGr_iv)
 
