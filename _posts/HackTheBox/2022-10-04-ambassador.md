@@ -1,5 +1,5 @@
 ---
-title: Ambassador | HackTheBox Medium
+title: Ambassador Writeup | HackTheBox Medium
 date: 2022-10-04 00:00:02 +530
 categories: [Write Up, HackTheBox]
 tags: [write up, hackthebox, ctf, Medium, red team] # TAG names should always be lowercase
