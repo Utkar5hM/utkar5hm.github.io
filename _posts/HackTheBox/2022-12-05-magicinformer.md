@@ -1,6 +1,6 @@
 ---
 title: The Magic Informer Writeup | HackTheBox University CTF 2022
-date: 2022-12-09 00:00:02 +530
+date: 2022-12-05 00:30:00 +530
 categories: [Write Up, HackTheBox]
 tags: [write up, hackthebox, ctf, Medium, red team] # TAG names should always be lowercase
 ---
@@ -194,7 +194,7 @@ So we tried copying the C code for reverse shell from the cheat sheet and adding
 
 So the final code we were left off with was the following:
 
-```C
+```c
 #include <sqlite3ext.h> /* Do not use <sqlite3.h>! */
 SQLITE_EXTENSION_INIT1
 #include <stdio.h>
