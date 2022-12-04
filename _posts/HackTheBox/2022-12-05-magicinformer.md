@@ -51,7 +51,7 @@ After creating an account at `/register` and logging in via `/login` , we get re
 
 The resume file upload functionality lets us upload any arbitrary file without restriction but appends .docx.
 
-The uploaded file could be downloaded at `/download?resume?HASH_OF_THE_FILE.docx`.  After trying several payloads, I found out that its vulnerable to Local File Inclusion (path traversals) and was able to read several files and getting to know  that the files are stored at `/app/upload`.
+The uploaded file could be downloaded at `/download?resume?HASH_OF_THE_FILE.docx`.  After trying several payloads, We found out that its vulnerable to Local File Inclusion (path traversals) and was able to read several files and getting to know  that the files are stored at `/app/upload`.
 
 passwd file obtained from the lfi:
 ```sh
@@ -87,11 +87,11 @@ node:x:1000:1000:Linux User,,,:/home/node:/bin/sh
 
 This lead us the ability to access the files (possible from node user) but not list directories. 
 
-Since it was a express app (Wappalyzer results), I tried checking  for `/app/package.json` which lead us to get hands on the source code of the app and the sqlite database (`admin.db`).
+Since it was a express app (Wappalyzer results), we tried checking  for `/app/package.json` which lead us to get hands on the source code of the app and the sqlite database (`admin.db`).
 
 After enumerating the sqlite db file, we found users and enrollments and settings tables. The setting files included some settings for a sms service with mostly a invalid apikey.
 
-```sqlite
+```sql
 sqlite> select * from settings;
 1|sms_verb|POST
 2|sms_url|https://platform.clickatell.com/messages
@@ -102,9 +102,9 @@ Authorization: Basic YWRtaW46YWRtaW4=
 6|sms_resp_bad|<status>error</status>
 ```
 
-Cracking the admin user password hash obtained from admin.db using hashcat  failed. 
+Cracking the admin user password hash obtained from admin.db using hashcat failed. 
 
-Open checking the source code we found Additional routes that were not found while fuzzing using gobuster.
+After checking the source code we found Additional routes that were not found while fuzzing using gobuster.
 
 As we were Unable to retrieve the flag, We tried to get into website as the admin user:
 
@@ -183,14 +183,14 @@ Connection: close
 
 Now we needed to somehow get an RCE or the ability to execute commands but the double quote filter was a issue. Just simple searches lead me to the `load_Extensions()` function  in sqlite. 
 
-I found the following github repository which included the source code to make a shared library file that the function takes in as a input then which later allows us to execute commands: [GitHub Link](https://github.com/mpaolino/sqlite-execute-module)
+We found the following github repository which included the source code to make a shared library file that the function takes in as a input then which later allows us to execute commands: [GitHub Link](https://github.com/mpaolino/sqlite-execute-module)
 
-I was able to execute commands like `ls` and `whoami`:
+We were able to execute commands like `ls` and `whoami`:
 ![](/assets/img/htb/magicinformer/TheMagicInformer-5.png)
 
 I found the file `readflag` stored at `/` , It had a suid bit. I tried executing it but failed, Downloading the binary and running it failed. So I tried getting a reverse shell by trying several payloads found at [PAyloadAllTheThings / Reverse shell cheat sheet](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Reverse%20Shell%20Cheatsheet.md#c)  by executing them but they din't work.
 
-So we tried copying the C code for reverse shell from the cheat sheet and adding it directly into the Shared library so that it gets executed with the main function of it.
+So I tried copying the C code for reverse shell from the cheat sheet and adding it directly into the Shared library so that it gets executed with the main function of it.
 
 So the final code we were left off with was the following:
 
