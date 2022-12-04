@@ -108,7 +108,7 @@ Open checking the source code we found Additional routes that were not found whi
 
 As we were Unable to retrieve the flag, We tried to get into website as the admin user:
 
-One of My teammate looked up at the `JWTHelper.js` and found out that it does not do signing verification so we could just modify the token (cookie)  to access as a admin user.
+We looked up at the `JWTHelper.js` and found out that it does not do signing verification so we could just modify the token (cookie)  to access as a admin user.
 
 ```js
 import jwt from "jsonwebtoken";
@@ -162,7 +162,7 @@ It was executing a sqlite queries as a command on system with execSync taking an
 
 However we needed to be a localhost to execute the command and the sql-prompt.html also didn't include a submit button. xD This and that the invalid `apikey` we found earlier just gave a instant hint that we can use the `POST` endpoint at `/api/sms/test` for sending the request at `/debug/sql/exec`:
 
-I came up with the following Request for making a valid sqlite query:
+We came up with the following Request for making a valid sqlite query:
 
 ```r
 POST /api/sms/test HTTP/1.1
@@ -190,9 +190,9 @@ I was able to execute commands like `ls` and `whoami`:
 
 I found the file `readflag` stored at `/` , It had a suid bit. I tried executing it but failed, Downloading the binary and running it failed. So I tried getting a reverse shell by trying several payloads found at [PAyloadAllTheThings / Reverse shell cheat sheet](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Reverse%20Shell%20Cheatsheet.md#c)  by executing them but they din't work.
 
-So i tried copying the C code for reverse shell from the cheat sheet and adding it directly into the Shared library so that it gets executed with the main function of it.
+So we tried copying the C code for reverse shell from the cheat sheet and adding it directly into the Shared library so that it gets executed with the main function of it.
 
-So the final code I was left off with was the following:
+So the final code we were left off with was the following:
 
 ```C
 #include <sqlite3ext.h> /* Do not use <sqlite3.h>! */
@@ -240,5 +240,5 @@ return SQLITE_OK;
 }
 ```
 
-After uploading the file and having a netcat listener at `4242`. I loaded the file and successfully received a shell and got the flag:
+After uploading the file and having a netcat listener at `4242`. we loaded the file and successfully received a shell and got the flag:
 ![](/assets/img/htb/magicinformer/TheMagicInformer-6.png)
