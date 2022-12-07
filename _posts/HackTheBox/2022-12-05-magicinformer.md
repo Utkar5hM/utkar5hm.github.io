@@ -2,14 +2,17 @@
 title: The Magic Informer Writeup | HackTheBox University CTF 2022
 date: 2022-12-05 00:30:00 +530
 categories: [Write Up, HackTheBox]
-tags: [write up, hackthebox, ctf, Medium, red team] # TAG names should always be lowercase
+tags: [write up, web, hackthebox, ctf, red team] # TAG names should always be lowercase
 ---
 
 -------------------
 
+Hackthebox University CTF 2022 : Supernatural Hacks was a University Wise CTF event held by HackTheBox with 942 teams participating from different universities across the world. This was my first Jeopardy style CTF of the year and where I had some preparation. This is a writeup for one of the few challenges we solved in the event.
 
-HackTheBox University CTF challenge 2022
-
+Description:
+```
+The Magic Informer is the only byte-sized wizarding newspaper that brings the best magical news to you at your fingertips! Due to popular demand and bold headlines, we are often targeted by wizards and hackers alike. We need you to pentest our news portal and see if you can gain access to our server.
+```
 -------------------
 The given address gives the following webpage:
 
@@ -241,4 +244,8 @@ return SQLITE_OK;
 ```
 
 After uploading the file and having a netcat listener at `4242`. we loaded the file and successfully received a shell and got the flag:
+
 ![](/assets/img/htb/magicinformer/TheMagicInformer-6.png)
+
+
+Note: I found out later after the end of the event that there exists a `.shell` command in sqlite which could be directly used instead of having to go throguh all the troubles of getting a reverse shell, etc. xD
