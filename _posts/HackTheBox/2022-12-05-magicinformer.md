@@ -248,4 +248,4 @@ After uploading the file and having a netcat listener at `4242`. we loaded the f
 ![](/assets/img/htb/magicinformer/TheMagicInformer-6.png)
 
 
-Note: I found out later after the end of the event that there exists a `.shell` command in sqlite which could be directly used instead of having to go throguh all the troubles of getting a reverse shell, etc. xD
+Note: I found out later after the event that there exists a `.shell` command in sqlite which could be directly used instead of having to go through all the troubles of getting a reverse shell, etc. xD
