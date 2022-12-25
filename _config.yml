@@ -23,13 +23,13 @@ timezone: Asia/Kolkata
 
 title: Utkar5hM # the main title
 
-tagline: Blog / Writeups # it will display as the sub-title
+tagline: B.Tech ECE student at NITK Surathkal interested in Infosec, development and tweaking with systems. :) # it will display as the sub-title
 
 description: >- # used by seo meta and the atom feed
-  Blog / Writeups
+  B.Tech ECE student at NITK Surathkal interested in Infosec, development and tweaking with systems. :)
 
 # fill in the protocol & hostname for your site, e.g., 'https://username.github.io'
-url: "https://blog.utkar5hm.tk"
+url: "https://utkar5hm.tk"
 
 github:
   username: utkar5hm # change to your github username
@@ -47,7 +47,6 @@ social:
     - https://twitter.com/utkar5hm # change to your twitter homepage
     - https://github.com/utkar5hm # change to your github homepage
     # Uncomment below to add more social links
-    - https://www.facebook.com/utkar5hm
     - https://www.linkedin.com/in/utkar5hm
 
 google_site_verification: # fill in to your verification string
