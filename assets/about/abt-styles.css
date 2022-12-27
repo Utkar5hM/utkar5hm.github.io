@@ -42,11 +42,11 @@ main {
 	justify-content: center;
 	padding: 0;
 	text-align: center;
-    background-image: url(abt-inv.jpg);
+    background-image: url(abt-bg.jpg);
     background-repeat: no-repeat;
     background-position:top;
     background-size:cover;
-    color: white;
+    color: b;
 }
 
 main > .intro {
@@ -83,7 +83,7 @@ main > .tagline {
   color: #d62828;
 }
 .icons-social :hover{
-    color:white;
+    color:black;
 }
 
 body {
@@ -91,14 +91,14 @@ body {
 }
 
 a {   
-    color: rgb(255, 255, 255);   
+    color: black;   
 }
 
 a:active {
-    color: rgb(187, 186, 186);
+    color: black;
 }
 
 a[tabindex]:focus {
-    color:rgb(179, 179, 182);
+    color:black;
     outline: none;
 }
