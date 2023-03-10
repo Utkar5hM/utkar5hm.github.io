@@ -1,6 +1,6 @@
 ---
 title: Ambassador Writeup | HackTheBox Medium
-date: 2022-01-02 00:00:01 +530
+date: 2023-01-02 00:00:01 +530
 categories: [Write Up, HackTheBox]
 tags: [write up, hackthebox, ctf, Medium, red team] # TAG names should always be lowercase
 image: 
