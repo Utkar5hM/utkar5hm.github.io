@@ -9,6 +9,10 @@ image:
 
 -------------------
 
+This blog post is a writeup for the ambassador machine from hackthebox. Exploiting a path traversal vulnerability in grafana gets the user shell and using consul service gets the root privilege. This was a medium-level machine requiring web application security, enumeration, and privilege escalation skills.
+
+-------------------
+
 
 [HackTheBox / Ambassador](https://app.hackthebox.com/machines/Ambassador)
 

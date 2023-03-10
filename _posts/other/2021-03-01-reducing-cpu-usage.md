@@ -5,7 +5,10 @@ categories: [Guides]
 tags: [guide, windows, tweaks, gaming, performance] # TAG names should always be lowercase
 ---
 
-> One of my older threads I made for nitksf.tech . I hope it helps.
+Are you frustrated by high CPU usage on your Windows PC? Do you want to speed up your system performance and save battery life or just play CPU intensive games? If so, this post is for you.
+
+> These are some tips and tricks that I’ve learned from various sources like [reddit](https://libreddit.spike.codes/r/Battlefield/comments/57nh6y/bf1_performance_tips_for_pc_potentially_huge_fps/) on how to reduce CPU usage in Windows over the years running the weaklings i3-3210 and i5-2500. These are some of the things that worked for me and I hope they will help you too. This is from one of my older threads that I made for nitksf.tech.
+
 
 # Some stuff in Windows
 
