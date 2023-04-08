@@ -16,6 +16,13 @@ $tab-count: {{ site.tabs | size | plus: 1 }}; // plus 1 for home tab
   background: url("/assets/about/saber.jpg") no-repeat fixed center/cover;
 }
 
+@media (max-width: 767px) {
+  #main-wrapper {
+    background-position: right 20% center; /* adjust the "20%" value to your desired position */
+  }
+}
+
+
 #main-wrapper::before {
   content: "";
   position: absolute;
