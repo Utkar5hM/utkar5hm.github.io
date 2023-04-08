@@ -1,0 +1,28 @@
+---
+---
+
+/*
+  If the number of TAB files has changed, the following variable is required.
+  And it must be defined before `@import`.
+*/
+$tab-count: {{ site.tabs | size | plus: 1 }}; // plus 1 for home tab
+
+@import "{{ site.theme }}";
+
+/* append your custom style below */
+
+
+#main-wrapper {
+  background: url("/assets/about/saber.jpg") no-repeat fixed center/cover;
+}
+
+#main-wrapper::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(19, 18, 18, 0.856); /* Change opacity value as needed */
+}
+
