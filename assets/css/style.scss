@@ -18,11 +18,13 @@ $tab-count: {{ site.tabs | size | plus: 1 }}; // plus 1 for home tab
 
 @media (max-width: 767px) {
   #main-wrapper {
-    background-position: right 20% center; /* adjust the "20%" value to your desired position */
-  }
+    background: url("/assets/about/saber-m2.png") no-repeat fixed top center;
+    }
+    #main-wrapper::before {
+      background-color: rgba(24, 23, 23, 0.664); /* Change opacity value as needed */
+    }
+    
 }
-
-
 #main-wrapper::before {
   content: "";
   position: absolute;
