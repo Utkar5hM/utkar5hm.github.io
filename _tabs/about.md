@@ -17,7 +17,7 @@ Hi there 👋! I'm Utkarsh, a B.Tech ECE student at NITK Surathkal, passionate a
 ## <i class="fa fa-briefcase" aria-hidden="true"></i> Experience
 -----------------
 - Systems Engineer, IRIS-NITK (2022-Present)
-  - Contributed to the deployment and maintenance of IRIS, Which is a student-run, full-fledged LMS system built on Ruby on Rails. It is a system wholly integrated with MS Teams, Moodle, and many other platforms, all developed and maintained by students.
+  - IRIS is a student-run, full-fledged LMS system built on Ruby on Rails. It is a system wholly integrated with MS Teams, Moodle, and many other platforms, all developed and maintained by students.
   - Dockerized multiple web applications and implemented Gitlab CI/CD pipeline with Nginx web server for continuous deployment.
   - Tested various methods of MariaDB distributed database management systems for high availability.
   - Worked on watcher service based on inotifier that synchronizes files across different machines and uploads them to Git.
