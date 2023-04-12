@@ -2,39 +2,80 @@
 title: About
 icon: fas fa-info-circle
 order: 4
-layout: none
 ---
-<html>
-<head>
-	<meta charset="utf-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+-----------------
 
-	<title>Utkar5hM</title>
+Hi there 👋! I'm Utkarsh, a B.Tech ECE student at NITK Surathkal, passionate about infosec, CTFs, development and tweaking with systems.:)
 
-	<link rel="icon" href="/favicon.ico" type="image/png" />
+## <i class="fa fa-university" aria-hidden="true"></i> Education
+-----------------
+- B.Tech in Electronics and Communication Engineering (2020-24)
+  - National Institute of Technology Karnataka, Surathkal
+  - CGPA: `8.11` (as of April 2023)
 
-	<link href="https://fonts.googleapis.com/css?family=Reem+Kufi|Roboto:300" rel="stylesheet">
-	
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.1/css/all.css" integrity="sha384-vp86vTRFVJgpjF9jiIGPEEqYqlDwgyBgEF109VFjmqGmIY/Y4HV4d3Gp2irVfcrp" crossorigin="anonymous">
-	<link rel="stylesheet" href="/assets/about/abt-styles.css">
-</head>
-<body>
-	<main>
-		<div class="intro">DeezBytez</div>
-		<div class="tagline">pent3ster / devel0per</div>
-		<!-- Find your icons from here - https://fontawesome.com/icons?d=gallery&s=brands -->
-		<div class="icons-social">
-			<a target="_blank" href="https://www.linkedin.com/in/utkar5hm"><i class="fab fa-linkedin-in"></i></a>
-			<a target="_blank" href="https://github.com/utkar5hm"><i class="fab fa-github"></i></a>
-			<a target="_blank" href="https://twitter.com/utkar5hm"><i class="fab fa-twitter"></i></a>
-    </div>
-	<div class="ret">
-	<a href="/">Go back to blog</a></div>
-	</main>
-</body>
-</html>
-<!-- 
-Half Credits :) - The freeCodeCamp Team 
-Signing Off - Utkar5hM
--->
+  
+## <i class="fa fa-briefcase" aria-hidden="true"></i> Experience
+-----------------
+- Systems Engineer, IRIS-NITK (2022-Present)
+  - Contributed to the deployment and maintenance of IRIS, Which is a student-run, full-fledged LMS system built on Ruby on Rails. It is a system wholly integrated with MS Teams, Moodle, and many other platforms, all developed and maintained by students.
+  - Dockerized multiple web applications and implemented Gitlab CI/CD pipeline with Nginx web server for continuous deployment.
+  - Tested various methods of MariaDB distributed database management systems for high availability.
+  - Worked on watcher service based on inotifier that synchronizes files across different machines and uploads them to Git.
+
+
+- CTF Player / Pentester - <em><span style="color:red">TryHackMe</span>, <span style="color:green">HackTheBox</span></em>
+  - Completed 140+ rooms on TryHackMe and Pwned 15+ Machines on Hackthebox, Many of which required exploiting known vulnerabilities in applications or services to gain access to
+the system or higher privileges.
+  - Participated in various CTFs like Nahamcon EU CTF 2022 (ranked 27th) and HackTheBox University CTF 2022 (154th).
+  - Completed Dante Pro Labs by HackTheBox.
+
+![HackTheBox](https://www.hackthebox.eu/badge/image/968125){: .left }
+
+<script src="https://tryhackme.com/badge/887742"></script>
+
+
+
+## <i class="fa fa-cog" aria-hidden="true"></i> Skills
+-----------------
+- Proficient in C++, JS
+- Python, Bash, Powershell, ASM(x86/ARM)
+- Web Development (ExpressJS/Ejs) / Backend+bootstrap FTW
+- Devops / Systems Administration (Linux, Docker, nginx, Gitlab CI/CD, etc...)
+- Red Team / Network / Web Penetration Testing.
+- Windows Active Directory (rookie but learning...) 
+
+## <i class="fa fa-folder" aria-hidden="true"></i> Projects
+-----------------
+- DockMagic (CTF Challenge / Vulnerable VM) [TryHackMe](https://tryhackme.com/jr/dockmagic)
+  - Started developing a CTF challenge as a recruitment task for IRIS, with the aim of covering skills required in day-to-day work, such as designing and implementing secure mechanisms and deployments.
+  - However, the task was cancelled, so I decided to work on it independently and uploaded it on TryHackMe.
+
+- Reddit 2 Frontends [Github](https://github.com/Utkar5hM/Reddit-2-Frontends.git)
+  - A small chrome extension that auto redirects reddit links to choice of your frontends. Creatd In order to scroll through reddit painlessly on NITK-NET.:P
+  - There already seems to be a official extension mentioned on libreddit's github page that does the same and has more features so ig You can use that instead. 
+
+- Bug Tracking System [Github](https://github.com/BenzeneAlcohol/TRINIT_SCRIPTKIDDIES_DEV)
+  - A Full-stack Website Built to manage bugs and issues throughout teams and organizations. 
+  - Hierarchy Level for users with support for team management, Ability for any user to report a bug and for specific team members to assign the bugs according to their roles.
+  - The reported bug can contain Priority level, Images and detailed description. There's also a discussion section for every bug where reporters and team members can discuss.
+  - This was a Submission for TRI-NIT hackathon 2022, placing us fourth. The hackathon had more than 2000 registrations.
+  - <em>NodeJs, ExpressJs, MongoDB, passport.JS.</em>
+
+- CTF Hosting Platform (IEEE-NITK) [Github](https://github.com/IEEE-NITK/ieee-eureka-22)
+  - MEN (Ejs) Stack-based CTF type platform for hosting IEEE-NITK's Eureka 2022 final event.
+  - Supports Admin panel for easily managing challenges and timings, Leaderboards to display live score/position.
+  - <em> NodeJs, ExpressJs, MongoDB, ESLint, passport.JS, Particle.JS </em>
+
+- ClubsCafe (Backend) [Github](https://github.com/ClubsCafe/cms-api)
+  - A REST API for a website that helps manage competitions/events held across institutes.
+  - Supports points system for leader boards and Profiles where one can showcase his/her awards, wins.
+  - <em> NodeJs, ExpressJs, MongoDB, ESLint, passport.JS, S3 Bucket.</em>
+
+- Yelpcamp [Github](https://github.com/Utkar5hM/YelpCamp)
+  - A Full stack Website where users can create and review campgrounds with support for images, price, description and location.
+  - Supports sorting and searching throughout all the campgrounds to quickly find campgrounds of desired rating and price.
+  - It also Supports a map overview of all the campgrounds implemented using the MapBox API.
+  - <em> NodeJs, ExpressJs, MongoDB, ESLint, passport.JS, Cloudinary, Helmet.</em> 
+
+-------------
+# Ig That's enough for now!
