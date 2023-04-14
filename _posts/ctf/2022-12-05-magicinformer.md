@@ -1,7 +1,7 @@
 ---
 title: The Magic Informer Writeup | HackTheBox University CTF 2022
 date: 2022-12-05 00:30:00 +530
-categories: [Write Up, HackTheBox]
+categories: [Write Up, HackTheBox, CTF]
 tags: [write up, web, hackthebox, ctf, red team] # TAG names should always be lowercase
 ---
 

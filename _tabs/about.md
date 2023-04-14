@@ -7,6 +7,17 @@ order: 4
 
 Hi there 👋! I'm Utkarsh, a B.Tech ECE student at NITK Surathkal, passionate about infosec, CTFs, development and tweaking with systems.:)
 
+<h3 align="center">Connect with me:</h3>
+<p align="center">
+<a href="https://twitter.com/utkar5hm" target="blank"><img align="center" src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/twitter.svg" alt="utkar5hm" height="30" width="40" /></a>
+&nbsp;&nbsp;
+<a href="https://linkedin.com/in/utkar5hm" target="blank"><img align="center" src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/linked-in-alt.svg" alt="utkar5hm" height="30" width="40" /></a>
+&nbsp;&nbsp;
+<a href="https://fb.com/utkar5hm" target="blank"><img align="center" src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/facebook.svg" alt="utkar5hm" height="30" width="40" /></a>
+&nbsp;&nbsp;
+
+</p>
+
 ## <i class="fa fa-university" aria-hidden="true"></i> Education
 -----------------
 - B.Tech in Electronics and Communication Engineering (2020-24)
@@ -24,7 +35,7 @@ Hi there 👋! I'm Utkarsh, a B.Tech ECE student at NITK Surathkal, passionate a
 
 
 - CTF Player / Pentester - <em><span style="color:red">TryHackMe</span>, <span style="color:green">HackTheBox</span></em>
-  - Completed 140+ rooms on TryHackMe and Pwned 15+ Machines on Hackthebox, Many of which required exploiting known vulnerabilities in applications or services to gain access to
+  - Actively completing rooms and pwning Machines on TryHackMe and Hackthebox, Many of which required exploiting known vulnerabilities in applications or services to gain access to
 the system or higher privileges.
   - Participated in various CTFs like Nahamcon EU CTF 2022 (ranked 27th) and HackTheBox University CTF 2022 (154th).
   - Completed Dante Pro Labs by HackTheBox.
