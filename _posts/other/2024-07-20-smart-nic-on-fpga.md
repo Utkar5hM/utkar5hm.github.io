@@ -5,7 +5,7 @@ categories: [Guides, Tutorials]
 tags: [guide, linux, fpga, verilog, veriloghdl, namespaces, veth, microblaze, c, AXI] # TAG names should always be lowercase
 ---
 
-Hey there folks, I'm writing here after a long aff time. Well, In this lore, I will be discussing about how we implemented our smart NIC  on a FPGA. This was my final year major project that I did with my fellow bros (Chinamaya & Muthukumar). The idea for the project popped into our face like acne due to our exposure to xdp/ebpf without a sunscreen, we wanted to do some hardware offloading kind of a thing for the same but due to unforeseen situations, things did take a turn.
+Hey there folks, I'm writing here after a long aff time. Well, In this lore, I will be discussing about how we implemented our smart NIC  on a FPGA. This was my final year major project that I did with my fellow bros ([Chinamay](https://www.linkedin.com/in/chinmay-sharma-9a68b8200/) & [Muthukumar](https://www.linkedin.com/in/muthuku37/)). The idea for the project popped into our face like acne due to our exposure to xdp/ebpf without a sunscreen, we wanted to do some hardware offloading kind of a thing for the same but due to unforeseen situations, things did take a turn.
 
 The project aimed to do several things initially:
 
