@@ -161,6 +161,14 @@ ip netns exec mp_nwk1 python veth2uart.py
 # ip netns exec mp_nwk2 ip address add 192.168.1.12/24 dev vethmp1
 ```
 
+so our config would be like:
+
+1. FPGA connected host's IP (connected to host via USB): `192.168.1.10`
+2. Externally connected host's IP (via ethernet to FPGA): `192.168.1.11`
+3. a third interface on the host for testing, with IP: `192.168.1.12`
+
+each of them in a different namespace.
+
 ## Offloading / Packet processing / Firewall
 
 This is something which we wanted to mainly do inside our NIC so that it would reduce the load on the hosts. As an example POC, we wanted to build a simple match action based firewall. we would see the IP address of the tcp packet and check if it is allowed. reject/drop if not. Our guide suggested us to use TCAM for making it more performant.
@@ -584,7 +592,10 @@ while True:
         continue
 ```
 
-Testing it out and this works!!!!!!
+In order to test it, let's try pining from an external host(`192.168.1.10`) to the host/fpga(`192.168.1.11`). This won't actually work as we it won't be able to discover the host but we can atleast expect ARP request packets.
+
+Testing it out and this works!!!!!! we can see the ARP packets
+![reception output](/assets/img/other/smart-nic-fpga/receptest.jpeg)
 
 ## Ethernet Frame/Packet Transmission
 
@@ -658,7 +669,9 @@ void RecvHandler(void *CallBackRef, unsigned int EventData)
 }
 ```
 
-Testing it out and this works!!!!!!
+For testing, We try pinging the external hosts(`eth interface`, `192.168.1.11`) from FPGA/Host(`192.168.1.10`). print through uart if we receive a frame in fpga. we sent it via emaclite as well, but I don't have screenshot with tcpdump as of right now. same ARP related situation applies here.
+
+![transmission test](/assets/img/other/smart-nic-fpga/veth2uart.jpeg)
 
 ## Combining Everything together
 
@@ -686,7 +699,7 @@ After a lot of thoughts and deepfull discussions, considering that we needed to 
 
 -------
 
-We kinda followed or have seen a lot of resources, Lost most of them in the process. But here are some if not already mentioned above, in no particular order:
+We kinda followed or have seen a lot of resources, lost most of them in the process. But here are some if not already mentioned above, in no particular order:
 
 1. NITK's CSE Dept Open Source Networking Technology Course Notes for working with veth's and namespaces.
 2. https://digilent.com/reference/learn/programmable-logic/tutorials/nexys-4-ddr-getting-started-with-microblaze-servers/start?redirect=1
@@ -694,7 +707,7 @@ We kinda followed or have seen a lot of resources, Lost most of them in the proc
 4. https://github.com/NetFPGA/NetFPGA-SUME-public/wiki/NetFPGA-SUME-TCAM-IPs
 5. https://xilinx.github.io/embeddedsw.github.io/emaclite/doc/html/api/example.html
 6. https://xilinx.github.io/embeddedsw.github.io/emaclite/doc/html/api/index.html
-7. https://insights.sei.cmu.edu/blog/how-to-build-a-trustworthy-freelibre-linux-capable-64-bit-risc-v-computer/
+7. https://github.com/rprinz08/hBPF
 8. https://people.ece.cornell.edu/land/courses/ece5760/FinalProjects/f2011/mis47_ayg6/mis47_ayg6/index.html
 9. https://gist.github.com/austinmarton/2862515
 10. https://support.xilinx.com/s/question/0D54U00005WcW1LSAV/etherner-raw-data-sniffing?language=en_US
@@ -702,4 +715,3 @@ We kinda followed or have seen a lot of resources, Lost most of them in the proc
 12. https://www.youtube.com/watch?v=pkDWzG8spvg&t=1145s
 13. https://docs.amd.com/r/2.2-English/pg318-tcam/Introduction
 14. https://github.com/dchammond/eth_debug
-15. https://github.com/rprinz08/hBPF
