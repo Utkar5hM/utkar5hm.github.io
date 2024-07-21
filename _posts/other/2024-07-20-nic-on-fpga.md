@@ -5,7 +5,7 @@ categories: [Guides, Tutorials]
 tags: [guide, linux, fpga, verilog, veriloghdl, namespaces, veth, microblaze, c, AXI] # TAG names should always be lowercase
 ---
 
-Hey there folks, I'm writing here after a long aff time. So, In this blog, I will be discussing about how we implemented our smart NIC card on a FPGA. This was my final year major project that I did with my GYAT bros. The idea for the project popped into our face like acne due to our exposure to xdp/ebpf without a sunscreen, trying to do some hardware offloading kind of a thing for the same.
+Hey there folks, I'm writing here after a long aff time. Well, In this blog, I will be discussing about how we implemented our smart NIC  on a FPGA. This was my final year major project that I did with my GYAT bros. The idea for the project popped into our face like acne due to our exposure to xdp/ebpf without a sunscreen, we wanted to do some hardware offloading kind of a thing for the same but due to unforeseen situations, things did take a turn.
 
 The project aimed to do several things initially:
 
@@ -126,14 +126,15 @@ This shi is dope. this can be used to sniff out packets during transmission and 
 
 ![alt text](/assets/img/other/smart-nic-fpga/duomeme.png)
 
-Well, using namespaces, we could just use a single laptop for testing things out. connect laptop and fpga to both UART(usb :3) and ethernet of the FPGA and work in different namespace to test things out easily. Hence, we no more needed our third guy who had another laptop acting as the external host. so we kicked him out. just kidding.
+Well, using namespaces, we could just use a single laptop. connect laptop and fpga together via both UART(usb :3) and ethernet of the FPGA and work in multiple network namespaces to test things out easily. Hence, we no more needed our third guy with another laptop acting as the external host. so we kicked him out. just kidding.
 
-We create a virtual ethernet interface, say `veth0`. we configured it to use the same mac address as that of the FPGA's ethernet interface. 
-We would sniff(listen) for packets on this `veth0` check if the source mac address of the packet is the interface's mac address. If it is, that means it was produced by the host and can be sent via the UART to FPGA. 
+We created a virtual ethernet interface caked `veth0`. we configured it to use the same mac address as that of the FPGA's ethernet interface. 
+
+We were then able to sniff(listen) for packets on this `veth0`, check if the source mac address of the packet is the interface's mac address. If it is, that means it was produced by the host and can be sent via the UART to FPGA. 
 
 so, `FPGA's Mac address = veth0's Mac address`
 
-While at reception, we would check for packets with destination mac address as that of the FPGA in the FPGA while polling, If it is, then we could process and send the packet to the host via UART and then insert it into the `veth0` or via another `veth1` which forwards the packet to `veth0`.
+While at reception, we were able to check for packets with destination mac address as that of the FPGA in the FPGA while polling, If it is, then we could process and send the packet to the host via UART and then insert it into the `veth0` or via another `veth1` which forwards the packet to `veth0`.
 
 ## Offloading / Packet processing / Firewall
 
@@ -144,8 +145,29 @@ TCAM , designed to facilitate rapid data retrieval, operates on the principle of
 
 The core consists of a memory array where each entry contains a data pattern (the key) and an associated mask. The mask specifies bits to be ignored in the search query, enabling the TCAM to execute flexible and complex matching operations. Operations are performed in parallel across all entries, drastically reducing the search time compared to sequential memory.
 
-well, It was again the time for fanum taxing github and so we did. We found this particular repository 
+well, It was again the time for fanum taxing, this time a tcam IP but to no avail, all of them we found required a propriety license. 
 
+Now we needed to develop our custom IP, this requires us to do the following:
+
+1. Implement your own TCAM or find one online that's built with Verilog HDL or VHDL.
+2. Turn it into an IP so that it is compatible to be added into our existing architecture ( via the block diagram page like other cores). This can be done by making it AXI compatible, which is by implementing an AXI wrapper around it.
+3. Write microblaze C drivers for the same.
+
+#### Verilog Implementation
+
+So, hard working us, went ahead and searched for a verilog implementation on github and so we did found few like OpenTCAM but this particular repository [mcjtag/tcam](https://github.com/mcjtag/tcam), was exactly what we needed. This is for various reasons:
+
+1. Easier to read code.
+2. has a valid /reset signal, so we didn't need to go modify it's codebase to have those things unlike OpenTCAM as this would help us know when our output is ready.
+
+#### Making it's vibes match with microblaze, Building an AXI - Wrapper
+
+The AXI (Advanced eXtensible Interface) is a type of communication protocol designed by ARM, which provides a high-bandwidth, low-latency interface for interconnecting various components in an FPGA or a system-on-chip. In the context of the TCAM IP, the AXI interconnect acts as the bridge that allows the MicroBlaze processor to access and manipulate the TCAM entries. Through this interconnect, the processor can perform read and write operations on the TCAM’s memory locations, set up search keys, and initiate search operations.
+
+
+but how do we do that?
+
+1. 
 ## Packet Reception
 
 ![Packet Reception Diagram](/assets/img/other/smart-nic-fpga/det_reception.jpeg)
