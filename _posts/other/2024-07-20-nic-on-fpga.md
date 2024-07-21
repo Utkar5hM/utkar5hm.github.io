@@ -5,7 +5,7 @@ categories: [Guides, Tutorials]
 tags: [guide, linux, fpga, verilog, veriloghdl, namespaces, veth, microblaze, c, AXI] # TAG names should always be lowercase
 ---
 
-Hey there folks, I'm writing here after a long aff time. Well, In this blog, I will be discussing about how we implemented our smart NIC  on a FPGA. This was my final year major project that I did with my GYAT bros. The idea for the project popped into our face like acne due to our exposure to xdp/ebpf without a sunscreen, we wanted to do some hardware offloading kind of a thing for the same but due to unforeseen situations, things did take a turn.
+Hey there folks, I'm writing here after a long aff time. Well, In this lore, I will be discussing about how we implemented our smart NIC  on a FPGA. This was my final year major project that I did with my GYAT bros. The idea for the project popped into our face like acne due to our exposure to xdp/ebpf without a sunscreen, we wanted to do some hardware offloading kind of a thing for the same but due to unforeseen situations, things did take a turn.
 
 The project aimed to do several things initially:
 
@@ -17,7 +17,6 @@ The project aimed to do several things initially:
 
 This is how it would look like overall:
 
-
 ![architecture](/assets/img/other/smart-nic-fpga/arch.png)
 
 
@@ -27,7 +26,7 @@ If you haven't figured it out, the `major project edition` in the title here mea
 2. We didn't do shit for the initial few months and barely had a week left for the **major** part of our MAJOR project.
 3. We needed to clutch and take a lotta shortcuts.
 
-So and `hence`, this isn't a full proof guide to building an entirely working industry standard NIC allowing offloads thats gonna be fast aff or do performancemaxxing but about how one can get started to produce a mvp (without the viable part) while knowing or having a lil bit experience with Verilog HDL, Linux(you'll know why later) and C to produce a NIC or whatever someone wants on a FPGA with mostly software oriented knowledge. We wanted to write this blog because we couldn't find a single goto place for such kinda things as everything was just  scattered in the ocean of the internet.
+So and `hence`, this isn't a full proof guide to building an entirely working industry standard NIC allowing offloads thats gonna be fast aff or do performancemaxxing but about how one can get started to produce a mvp (minimum viable product, without the viable part) while knowing or having a lil bit experience with Verilog HDL, Linux(you'll know why later) and C to produce a NIC or whatever someone wants on a FPGA with mostly software oriented knowledge. We wanted to write this blog because we couldn't find a single goto place for such kinda things as everything was just  scattered in the ocean of the internet.
 
 Though we had good enough experience working with Verilog HDL in the past, We had never flashed and played with an FPGA before. Getting one itself from the university's pocket took considerable amount of time. We ended up with **Nexys 4 DDR** because that was the one that the university had and could be used with Vivado as anyone who has ever used quartus knows how much of a bad UI/UX it has (This matters to me :3). 
 
@@ -128,13 +127,39 @@ This shi is dope. this can be used to sniff out packets during transmission and 
 
 Well, using namespaces, we could just use a single laptop. connect laptop and fpga together via both UART(usb :3) and ethernet of the FPGA and work in multiple network namespaces to test things out easily. Hence, we no more needed our third guy with another laptop acting as the external host. so we kicked him out. just kidding.
 
-We created a virtual ethernet interface caked `veth0`. we configured it to use the same mac address as that of the FPGA's ethernet interface. 
+We created a virtual ethernet interface caked `vethmp0`. we configured it to use the same mac address as that of the FPGA's ethernet interface. 
 
-We were then able to sniff(listen) for packets on this `veth0`, check if the source mac address of the packet is the interface's mac address. If it is, that means it was produced by the host and can be sent via the UART to FPGA. 
+We were then able to sniff(listen) for packets on this `vethmp0`, check if the source mac address of the packet is the interface's mac address. If it is, that means it was produced by the host and can be sent via the UART to FPGA. 
 
-so, `FPGA's Mac address = veth0's Mac address`
+so, `FPGA's Mac and IP address = vethmp0's Mac and IP address`
 
-While at reception, we were able to check for packets with destination mac address as that of the FPGA in the FPGA while polling, If it is, then we could process and send the packet to the host via UART and then insert it into the `veth0` or via another `veth1` which forwards the packet to `veth0`.
+While at reception, we were able to check for packets with destination mac address as that of the FPGA in the FPGA while polling, If it is, then we could process and send the packet to the host via UART and then insert it into the `vethmp0` or via another `vethmp1` which forwards the packet to `vethmp0`.
+
+#### configuring the development environment:
+
+We created a bash script for simplifying the process, just run it once and we're done;
+```bash
+ip netns add mp_nwk2
+ip link add vethmp0 type veth peer name vethmp1
+ip link set vethmp1 netns mp_nwk2
+ip netns exec mp_nwk2 ip link set lo up
+ip link set dev vethmp0 address 00:18:3E:01:EB:3A
+ip link set vethmp0 up
+ip address add 192.168.1.10/24 dev vethmp0
+ip netns exec mp_nwk2 ip link set vethmp1 up
+ip netns exec mp_nwk2 ip address add 192.168.1.12/24 dev vethmp1
+
+ip netns add mp_nwk1
+ip netns exec mp_nwk1 ip link set lo up
+ip link set vethmp0 netns mp_nwk1
+ip netns exec mp_nwk1 ip link set vethmp0 up
+ip netns exec mp_nwk1 ip address add 192.168.1.10/24 dev vethmp0
+ip netns exec mp_nwk1 python veth2uart.py
+#term2
+# ip netns exec mp_nwk2 bash
+# ip netns exec mp_nwk2 ip link set vethmp1 up
+# ip netns exec mp_nwk2 ip address add 192.168.1.12/24 dev vethmp1
+```
 
 ## Offloading / Packet processing / Firewall
 
@@ -164,11 +189,401 @@ So, hard working us, went ahead and searched for a verilog implementation on git
 
 The AXI (Advanced eXtensible Interface) is a type of communication protocol designed by ARM, which provides a high-bandwidth, low-latency interface for interconnecting various components in an FPGA or a system-on-chip. In the context of the TCAM IP, the AXI interconnect acts as the bridge that allows the MicroBlaze processor to access and manipulate the TCAM entries. Through this interconnect, the processor can perform read and write operations on the TCAM’s memory locations, set up search keys, and initiate search operations.
 
+Before diving into making one, we need to understand few more things.
 
-but how do we do that?
+##### AXI Master / Slave
 
-1. 
-## Packet Reception
+1. Master is the controller, the one that initiates transactions. Think of it as the driver on the highway, deciding where to go and when.
+2. Slave is the responder, the one that reacts to the master's commands. It's like the toll booth or service station, providing what the master requests.
 
-![Packet Reception Diagram](/assets/img/other/smart-nic-fpga/det_reception.jpeg)
+In our context, We needed to implemented a slave interface because our MicroBlaze processor is acting as the master. The MicroBlaze initiated the transactions, and our TCAM (acting as the slave) responded to those commands.
 
+##### AXI Lite vs. AXI Full vs. AXI Stream
+
+1. AXI Lite: This is the basic version, perfect for simpler tasks. It’s got a straightforward address and data path, making it super easy to use but a bit limited in terms of bandwidth and performance.
+
+2. AXI Full: This is the deluxe version, like Real Madrid with Mbappe. It’s designed for high-performance tasks and can handle complex data transfers with multiple channels for reading and writing simultaneously. It’s like having a high-speed, multi-lane highway compared to AXI Lite’s single-lane road.
+
+3. AXI Stream: This version is all about continuous data transfer, without the need for addressing. It’s ideal for applications where data is flowing in a steady stream, like video or audio data.
+
+We decided to proceed with AXI Lite as it looked quite simpler to work with and that's what a tutorial we followed had used.
+
+### So How do we actually implement it?
+
+Well, There are quite a decent number of resources for this. For one, Vivado Lets you generate a AXI wrapper which you can modify to add your own logic inside or you could write your own AXI wrapper entirely as suggested in [Buidilng an AXI-Lite slave the easy way
+](https://zipcpu.com/blog/2020/03/08/easyaxil.html). This particular blog also claims that the pre existing axi wrapper template in Vivado has issues. I don't exactly remember the points but you can always click on the link to read more. But we decided to go for the first. There's also an video resource [Generating custom AXI4-Stream IP core using Xilinx Vivado](https://www.youtube.com/watch?v=chs5mdwMchQ) that explains implementing AXI interface from scratch.
+
+In order to generate an AXI wrapper with vivado, One can follow many blogs and youtube videos available online like  [Integrating a custom AXI IP Core in Vivado for Xilinx Zynq ](https://www.youtube.com/watch?v=IDqzmcMR7p0), [Vivado Tutorial: Turn Verilog IP into AXI Module
+](https://www.youtube.com/watch?v=mBRUK196qIA), [Microblaze RTL Simulation and AXI Slave wrapper tutorial](https://www.youtube.com/watch?v=EjnH-CgOp2g) and many more.
+
+The following video [Custom Slave AXI LITE Interface for Microblaze with Xilinx Vitis P1](https://www.youtube.com/watch?v=BONXPKXyJTk) was the one that we followed and gives a basic understanding on instantiating your own custom verilog module into the AXI Wrapper.
+
+while following the tutorial, we ended up creating an IP package with 6 slave registers as we weren't sure on how many were needed and also 32 bits data width as an IP(Internet Protocol) address is of length 32 bits which would be our input key.
+
+our instantiation of the tcam verilog module looked something like this inside the `IPNAME_v1_0_S00_AXI.v` file:
+```verilog
+	module ecemptcamip_v1_0_S00_AXI #
+	(
+        // blablabla
+		parameter integer C_S_AXI_DATA_WIDTH	= 32,
+		// Width of S_AXI address bus
+		parameter integer C_S_AXI_ADDR_WIDTH	= 5
+	)
+	(
+        // blablabla;
+    );
+        // blablabla;
+	tcam tcam_inst(.clk(S_AXI_ACLK),
+        .rst(~S_AXI_ARESETN),
+        .set_addr(slv_reg0[4:0]),
+        .set_data(slv_reg0[9:5]),
+        .set_key(slv_reg1),
+        .set_xmask(slv_reg2),
+        .set_clr(slv_reg0[10]),
+        .set_valid(slv_reg0[11]),
+        .req_key(slv_reg3),
+        .req_valid(slv_reg0[12]),
+        .req_ready(out_req_ready),
+        .res_addr(out_res_addr),
+        .res_data(out_res_data),
+        .res_valid(out_res_valid),
+        .res_null(out_res_null)
+        );
+    endmodule
+```
+
+Note: I just realized while writing the blog that I didn't set the parmater values which were required and hence `req_key` actually became 4 bits wide instead of 32. This deeply cooked us at that time and we couldn't really figure out why in the short time span. This will be discussed further down the blog.
+
+well we also need to set value to the `set_*` and `req_*` inputs. For that, this particular part of the AXI does it for us by storing data into slave registers one by one in clock cycles:
+
+![alt text](/assets/img/other/smart-nic-fpga/axiread.png)
+
+we just extract this values and map it into the tcam as done above in instantiation.
+
+We then configure new wires to extract out the output values from the tcam and set it in the following block of the wrapper:
+
+```verilog 
+	// Implement memory mapped register select and read logic generation
+	// Slave register read enable is asserted when valid address is available
+	// and the slave is ready to accept the read address.
+	assign slv_reg_rden = axi_arready & S_AXI_ARVALID & ~axi_rvalid;
+	always @(*)
+	begin
+	      // Address decoding for reading registers
+	      case ( axi_araddr[ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB] )
+	        3'h0   : reg_data_out <= slv_reg0;
+	        3'h1   : reg_data_out <= slv_reg1;
+	        3'h2   : reg_data_out <= slv_reg2;
+	        3'h3   : reg_data_out <= slv_reg3;
+	        3'h4   : reg_data_out <= slv_reg4;
+	        3'h5   : begin
+	           reg_data_out[4:0] <= out_res_addr;
+	           reg_data_out[9:5] <= out_res_data;
+	           reg_data_out[10] <= out_req_ready;
+	           reg_data_out[11] <= out_res_valid;
+	           reg_data_out[12] <= out_res_null;
+	        end
+	        default : reg_data_out <= 0;
+	      endcase
+	end
+```
+The video linked above will give you a much clearer explanation on how things work.
+
+so we end up with a TCAM IP that looks like this:
+
+
+![Packet Reception Diagram](/assets/img/other/smart-nic-fpga/axitcam.jpeg)
+
+Packaging it up and connecting it to the microblaze, regenerating stuff and running connection automation. we finally get this new block diagram, It's the last, I promise: **UNCENSORED, yey**
+
+![block diagram final](/assets/img/other/smart-nic-fpga/bdf.jpeg)
+
+### Writing drivers for the built TCAM-IP
+
+We now need to be able to use it with C and run it with microblaze, we do that by writing drivers for the same. Having an AXI interface makes it a lot easier for us. It provides library to be able to read and set register values. This is what we need to do.
+
+set register values such that it properly sets our required input variables to the TCAM and read values from registers in similar way.
+
+Vivado generated AXI wrapper also creates a template driver for our use case which is located under `your_app_bsc/microblaze_or_your_proc/libsrc/IP_NAME_v1_0/src`.
+
+One of the previously listed video [Microblaze RTL Simulation and AXI Slave wrapper tutorial](https://www.youtube.com/watch?v=EjnH-CgOp2g),  nicely explains on how to work with the created IP in Vivado SDK.
+
+we defined several functions of our own:
+
+1. `ECEMPTCAMIP_delay` to generate delay, pretty dumb way tbh. MB_SLEEP could also probably be used instead of this:
+```c
+void ECEMPTCAMIP_delay(u64 d1){
+	for(u64 i=0; i<d1; i++){
+		for(u64 j=0;j<9999999999999999;)
+			j=j+1;
+	    }
+}
+```
+
+2. `ECEMPTCAMIP_SetKey` to give inputs:
+```c
+void ECEMPTCAMIP_SetKey(u32 BaseAddress, u8 Address, u8 Data, u32 Key, u32 KeyMask){
+
+	// Set Key
+	ECEMPTCAMIP_mWriteReg(BaseAddress, 4*1, Key);
+
+	// Set Key Mask
+	ECEMPTCAMIP_mWriteReg(BaseAddress, 4*2, KeyMask);
+
+	//	Set Address[4:0], data[9:5], set_clr[10]=0,set_valid[11]=1, req_valid[12]=0
+	u32 RegData =0;
+	// Mask Address and Data to use only lower 5 bits
+	Address &= 0x1F; // 0x1F = 0001 1111 in binary, ensuring only lower 5 bits are used
+	Data &= 0x1F;
+
+	// Shift Address and Data to their correct positions and set in RegData
+	RegData |= (Address << 0);  // Address is at bits 4:0
+	RegData |= (Data << 5);     // Data is at bits 9:5
+
+	// Set set_valid to 1 at bit 11
+	RegData |= (1 << 11);       // Set bit 11
+	ECEMPTCAMIP_mWriteReg(BaseAddress, 0, RegData);
+	ECEMPTCAMIP_delay(999999);
+	ECEMPTCAMIP_delay(999999);
+	// Set set_valid back to 0
+	RegData &= ~(1 << 11);
+	ECEMPTCAMIP_mWriteReg(BaseAddress, 0, RegData);
+	ECEMPTCAMIP_delay(999999);
+	ECEMPTCAMIP_delay(999999);
+	return;
+}
+```
+
+3. `ECEMPTCAMIP_GetKey` to read input
+
+```c
+u32 ECEMPTCAMIP_GetKey(u32 BaseAddress, u32 Key){
+	// set Req_key
+	ECEMPTCAMIP_mWriteReg(BaseAddress, 4*3, Key);
+
+	// Set_valid to false and other stuff as well.
+	u32 RegData =0;
+	// Set req_valid to 1 at bit 12
+	RegData |= (1 << 12);       // Set bit 11
+	ECEMPTCAMIP_mWriteReg(BaseAddress, 0, RegData);
+	u32 Response = 0;
+	u8 ResponseReady=0;
+	u32 ResponseCheckCount=0;
+	while(ResponseReady==0){
+		ECEMPTCAMIP_delay(999999);
+		Response = ECEMPTCAMIP_mReadReg(BaseAddress, 4*5);
+	    // Extracting out_req_ready from Response[10]
+	    ResponseReady = (u8)((Response >> 10) & 0x01) || (ECEMPTCAMIP_GetRespValid(Response) &( !ECEMPTCAMIP_GetRespNull(Response)));  // Only need 1 bit
+
+	    ResponseCheckCount++;
+	    if(ResponseCheckCount>1000) {
+
+	    	Response = 1U << 12;
+	    	break;
+	    }
+	}
+	RegData &= ~(1 << 12);
+	ECEMPTCAMIP_mWriteReg(BaseAddress, 0, RegData);
+	ECEMPTCAMIP_delay(999999);
+	return Response;
+}
+```
+
+4. various functions to extract required data from obtained register values:
+
+```c
+u8 ECEMPTCAMIP_GetRespAddr(u32 Response) {
+	return ((u8)(Response & 0x1F));
+}
+
+u8 ECEMPTCAMIP_GetRespData(u32 Response) {
+	return ((u8)((Response >> 5) & 0x1F));
+}
+
+u8 ECEMPTCAMIP_GetRespValid(u32 Response) {
+	return  (u8)((Response >> 11) & 0x01);
+}
+
+u8 ECEMPTCAMIP_GetRespNull(u32 Response) {
+	return (u8)((Response >> 12) & 0x01);
+}
+```
+
+The obviously a test bench:
+
+```c
+#include <stdio.h>
+#include "platform.h"
+#include "xil_printf.h"
+#include "ecemptcamip.h"
+
+
+int main()
+{
+    init_platform();
+    xil_printf("Major Project TCAM-IP\n\r");
+    xil_printf("--- Input 1 ---\n\r");
+    u8 Address =0;
+    u8 Data=2;
+    u32 Key=73;
+    u32 KeyMask=0;
+    KeyMask |= 0xFF;
+    xil_printf("Address %u\n\r", Address);
+    xil_printf("Data %u\n\r", Data);
+    xil_printf("Key %u\n\r", Key);
+    xil_printf("KeyMask %u\n\r", KeyMask);
+    ECEMPTCAMIP_SetKey(XPAR_ECEMPTCAMIP_0_S00_AXI_BASEADDR, Address, Data, Key, KeyMask);
+    ECEMPTCAMIP_delay(999999);
+    xil_printf("--- Input 2 ---\n\r");
+    Address =1;
+    Data=5;
+    Key=4000;
+    KeyMask=0;
+    xil_printf("Address %u\n\r", Address);
+    xil_printf("Data %u\n\r", Data);
+    xil_printf("Key %u\n\r", Key);
+	xil_printf("KeyMask %u\n\r", KeyMask);
+	ECEMPTCAMIP_SetKey(XPAR_ECEMPTCAMIP_0_S00_AXI_BASEADDR, Address, Data, Key, KeyMask);
+	ECEMPTCAMIP_delay(999999);
+    xil_printf("--- Input 3 ---\n\r");
+    Address =2;
+    Data=4;
+    Key=2502;
+    KeyMask=0;
+    xil_printf("Address %u\n\r", Address);
+    xil_printf("Data %u\n\r", Data);
+    xil_printf("Key %u\n\r", Key);
+	xil_printf("KeyMask %u\n\r", KeyMask);
+	ECEMPTCAMIP_SetKey(XPAR_ECEMPTCAMIP_0_S00_AXI_BASEADDR, Address, Data, Key, KeyMask);
+	ECEMPTCAMIP_delay(999999);
+    xil_printf("--- Reading Output 1 ---\n\r");
+    Key=4000;
+    xil_printf("Input Key : %lu\n\r", Key);
+    u32 Response = ECEMPTCAMIP_GetKey(XPAR_ECEMPTCAMIP_0_S00_AXI_BASEADDR, Key);
+    xil_printf("Data: %u\n\r", ECEMPTCAMIP_GetRespData(Response));
+    xil_printf("Address: %u\n\r", ECEMPTCAMIP_GetRespAddr(Response));
+    xil_printf("Response Valid?: %u\n\r", ECEMPTCAMIP_GetRespValid(Response));
+    xil_printf("Response Null: %u\n\r", ECEMPTCAMIP_GetRespNull(Response));
+	ECEMPTCAMIP_delay(999999);
+    xil_printf("--- Reading Output 2 ---\n\r");
+    Key=2503;
+    xil_printf("Input Key : %lu\n\r", Key);
+    Response = ECEMPTCAMIP_GetKey(XPAR_ECEMPTCAMIP_0_S00_AXI_BASEADDR, Key);
+    xil_printf("Data: %u\n\r", ECEMPTCAMIP_GetRespData(Response));
+    xil_printf("Address: %u\n\r", ECEMPTCAMIP_GetRespAddr(Response));
+    xil_printf("Response Valid?: %u\n\r", ECEMPTCAMIP_GetRespValid(Response));
+    xil_printf("Response Null: %u\n\r", ECEMPTCAMIP_GetRespNull(Response));
+	ECEMPTCAMIP_delay(999999);
+    xil_printf("--- Reading Output 3 ---\n\r");
+    Key=62;
+    xil_printf("Input Key : %lu\n\r", Key);
+    Response = ECEMPTCAMIP_GetKey(XPAR_ECEMPTCAMIP_0_S00_AXI_BASEADDR, Key);
+    xil_printf("Data: %u\n\r", ECEMPTCAMIP_GetRespData(Response));
+    xil_printf("Address: %u\n\r", ECEMPTCAMIP_GetRespAddr(Response));
+    xil_printf("Response Valid?: %u\n\r", ECEMPTCAMIP_GetRespValid(Response));
+    xil_printf("Response Null: %u\n\r", ECEMPTCAMIP_GetRespNull(Response));
+    cleanup_platform();
+    return 0;
+}
+```
+
+The above linked video and [Drivers for custom IP](https://www.youtube.com/watch?v=U-75MjbZyJE&t=383s) will give you more insights on the above code.
+
+Following is a diagram on how the code is supposed to work:
+
+![tcam tb flow Diagram](/assets/img/other/smart-nic-fpga/flow.png)
+
+Running the tests, we were able to get the following results:
+
+![tcam tb results](/assets/img/other/smart-nic-fpga/TCAM_IP.jpg)
+
+Well, We got this TCAM part before endsems had started, Had a nice cold coffee at the nearby nescafe. went ahead and slept for the week not worrying about it. 
+
+Later turned tides on the last night where it gave unexpected output for different IP addresses given as keys. We mostly tried to play around with increasing and decreasing delay, switching between our custom delay func and MB_Sleep and so does the diagram above has it. We just planned to drop fixing it as it was already 6 a.m. in the morning and our presentation was at 10 a.m. It probably was due to not having set the parameter values described above but I'm not sure so. I hope the above part of the blog at least serves as a base on how to implement an AXI wrapper and start working with it.
+
+
+As rest part of this subsection is just working with C, We can skip it and see that the whole match action firewall could then be summarised to work like:
+
+![firewall diagram](/assets/img/other/smart-nic-fpga/firewall.jpeg)
+
+## Ethernet Frame Reception
+
+>  Note: I won't be pasting the entire code files for this or the transmission section as they're pretty huge. Unless there's small script files that needs explanation. You can visit the github link of the project and find it there if needed.
+
+The diagram below is honestly, pretty self explanatory but let's still explore the Ethernet Frame reception Implementation of the project in detail as I wanted to increase the total length of this blog.
+
+![Frame Reception Diagram](/assets/img/other/smart-nic-fpga/det_reception.jpeg)
+
+
+
+Since you already know that we're polling for the ethernet frames, We have to take certain decisions whenever the function catches one. Because packets can be of any type can be contained in them. We can't do match action against a non IPV4 /V6 type packet unless we also implement a MAC address based filtering. So what we do is:
+
+1. Wait for the Frame.
+2. Check if the ethertype of the ethernet frame is `IPv4` shi, since we only built a firewall for IPV4. Here, EtherType is a two-octet field in an Ethernet frame. It is used to indicate which protocol is encapsulated in the payload of the frame and is used at the receiving end by the data link layer to determine how the payload is processed. (Source: [wikipedia](https://en.wikipedia.org/wiki/EtherType))
+3. so Now, if the frame is indeed of type `IPv4`, we extract the IP address and send it to our Firewall Logic, which does it's magic and sends us back a boolean value indicating if it should be dropped. If we have to drop. we just return and poll again.
+4. if It's not a `IPv4`, we just skip the part and still proceed.
+5. Now in order to send the frame to the host system, we first prepend the size of the frame padded to 2 bytes. So, later the system can know on how much data is to be expected. and also appended it with newline(`\r\n`) so we could just use `ser.readline()`. Only either would have been enough, but caffeine can kick humans into doing many things that they shouldn't, especially when . 
+6. we send the data through UART with uartlite drivers. Ignore most of the initial part.
+
+```c
+	while(1){
+			if(FrameCaptured > 0){
+                // Ignore this part, I don't remember
+				XEmacLite_Send(&EmacLiteInstance,
+						(u8 *)&TxFrame,
+						FrameLength);
+				MB_Sleep(10);
+				FrameCaptured=0;
+				FrameLength=0;
+			} else {
+				while(TotalSentCount<RxFrameBufferLength){
+				}
+				TotalSentCount=0;
+				RxFrameBufferLength=0;
+				while (RecvFrameLength == 0) {
+					RecvFrameLength = XEmacLite_Recv(EmacLiteInstPtr,
+									 (u8 *)RxFrame); // part that matters, starts here.
+				}
+				u8 Response = ProcessRecvFrame((u16 *)RxFrame); // YO your firewall goes here
+				if(Response==1){
+					u8 RxFrameBuffer[1600];
+					memset(RxFrameBuffer, 0, sizeof(RxFrameBuffer));
+					memcpy(RxFrameBuffer, RxFrame, RecvFrameLength);
+					u16 length = Xil_Htons(RecvFrameLength);  // Convert to network byte order
+					memcpy(&RxFrameBuffer[1600 - 4], (u8*)&length, 2);
+					RxFrameBuffer[1600-2]='\r';
+					RxFrameBuffer[1600-1]='\n';
+					RecvFrameLength=0;
+					RxFrameBufferLength=1600;
+					memset(RxFrame, 0, sizeof(RxFrame));
+					XUartLite_Send(&UartLite, (u8*)RxFrameBuffer, RxFrameBufferLength);
+				}
+			}
+	    }
+```
+
+7. We have the following scapy based python program running which expects for data from the UART COM Port.
+
+```py
+import serial
+from scapy.all import Ether, sendp, UDP, IP , srp
+from time import sleep
+
+ser = serial.Serial('/dev/ttyUSB1')  # replace with your serial port
+frame = b""
+capturing = False
+while True:
+    try:
+        data = ser.readline()[:-2]
+        framelen = int.from_bytes(data[-2:], 'big')
+        # if(framelen < 1520): idr whats this doing here
+        frame = Ether(bytes(Ether(data[:framelen])))
+        print(framelen)
+        frame.show()
+        sendp(frame, iface="vethmp0")
+        # srp(frame, iface='vethmp0')
+    except Exception as e:
+        continue
+```
+
+Testing it out, This works!!!!!!
