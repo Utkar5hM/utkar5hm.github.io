@@ -706,7 +706,7 @@ It looks like it's working, But it wasn't. That output is what we got when we ra
 Upon inspecting with Wireshark, we could clearly see that the packets sent from FPGA to the host via UART were malformed.
 ![final output](/assets/img/other/smart-nic-fpga/wireshark_err.jpeg)
 
-After a lot of thought and deep discussions, considering that we needed to make a report and a presentation and that we had to return the FPGA back to the university after that. We successfully **Rage Quitted**.
+After a lot of thought and deep discussions, considering that we needed to make a report and a presentation and that we had to return the FPGA back to the university after it. We successfully **Rage Quitted**.
 
 
 -------
