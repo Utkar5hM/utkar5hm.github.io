@@ -5,7 +5,7 @@ categories: [Guides, Tutorials]
 tags: [guide, linux, fpga, verilog, veriloghdl, namespaces, veth, microblaze, c, AXI] # TAG names should always be lowercase
 ---
 
-Hey there folks, I'm writing here after a long aff time. Well, In this lore, I will be discussing about how we implemented our smart NIC  on a FPGA. This was my final year major project that I did with my GYAT bros. The idea for the project popped into our face like acne due to our exposure to xdp/ebpf without a sunscreen, we wanted to do some hardware offloading kind of a thing for the same but due to unforeseen situations, things did take a turn.
+Hey there folks, I'm writing here after a long aff time. Well, In this lore, I will be discussing about how we implemented our smart NIC  on a FPGA. This was my final year major project that I did with my fellow bros (Chinamaya & Muthukumar). The idea for the project popped into our face like acne due to our exposure to xdp/ebpf without a sunscreen, we wanted to do some hardware offloading kind of a thing for the same but due to unforeseen situations, things did take a turn.
 
 The project aimed to do several things initially:
 
@@ -117,7 +117,7 @@ You want to test your NIC without rotting up your main network setup. Enter Linu
 
 So this allows us to create a virtual ethernet interface, just like its name. I remember once renting a game CD as a 10y old with title `blank`, The cd was infact actually blank, Same situation. You don't actually need to have a physical ethernet interface to have this, It can be used as a real ethernet interface, This is how vpns work ig. *gotta add that ig everywhere*
 
-#### scapy
+#### Scapy - A python library
 
 This shi is dope. this can be used to sniff out packets during transmission and send packets during reception from/to an interface . 
 
@@ -514,13 +514,11 @@ The diagram below is honestly, pretty self explanatory but let's still explore t
 
 ![Frame Reception Diagram](/assets/img/other/smart-nic-fpga/det_reception.jpeg)
 
-
-
 Since you already know that we're polling for the ethernet frames, We have to take certain decisions whenever the function catches one. Because packets can be of any type can be contained in them. We can't do match action against a non IPV4 /V6 type packet unless we also implement a MAC address based filtering. So what we do is:
 
 1. Wait for the Frame.
-2. Check if the ethertype of the ethernet frame is `IPv4` shi, since we only built a firewall for IPV4. Here, EtherType is a two-octet field in an Ethernet frame. It is used to indicate which protocol is encapsulated in the payload of the frame and is used at the receiving end by the data link layer to determine how the payload is processed. (Source: [wikipedia](https://en.wikipedia.org/wiki/EtherType))
-3. so Now, if the frame is indeed of type `IPv4`, we extract the IP address and send it to our Firewall Logic, which does it's magic and sends us back a boolean value indicating if it should be dropped. If we have to drop. we just return and poll again.
+2. Check if the ethertype of the ethernet frame is `IPv4` type shi, since we only built a firewall for IPV4. Here, EtherType is a two-octet field in an Ethernet frame. It is used to indicate which protocol is encapsulated in the payload of the frame and is used at the receiving end by the data link layer to determine how the payload is processed. (Source: [wikipedia](https://en.wikipedia.org/wiki/EtherType))
+3. so now, if the frame is indeed of type `IPv4`, we extract the IP address and send it to our Firewall Logic, which does it's magic and sends us back a boolean value indicating if it should be dropped. If we have to drop. we just return and poll again.
 4. if It's not a `IPv4`, we just skip the part and still proceed.
 5. Now in order to send the frame to the host system, we first prepend the size of the frame padded to 2 bytes. So, later the system can know on how much data is to be expected. and also appended it with newline(`\r\n`) so we could just use `ser.readline()`. Only either would have been enough, but caffeine can kick humans into doing many things that they shouldn't, especially when . 
 6. we send the data through UART with uartlite drivers. Ignore most of the initial part.
@@ -528,7 +526,7 @@ Since you already know that we're polling for the ethernet frames, We have to ta
 ```c
 	while(1){
 			if(FrameCaptured > 0){
-                // Ignore this part, I don't remember
+                // Ignore this part for now, It's for Transmission
 				XEmacLite_Send(&EmacLiteInstance,
 						(u8 *)&TxFrame,
 						FrameLength);
@@ -586,4 +584,122 @@ while True:
         continue
 ```
 
-Testing it out, This works!!!!!!
+Testing it out and this works!!!!!!
+
+## Ethernet Frame/Packet Transmission
+
+Here we go again.
+
+![Frame Transmission Diagram](/assets/img/other/smart-nic-fpga/Transmission.jpg)
+
+Well it's pretty straight forward in transmission as we don't really need to do any kind of processing. The process can be broken down into the following:
+
+1. Sniff for packets with scapy:
+
+```py
+from scapy.all import sniff, Ether
+import serial
+
+ser = serial.Serial('/dev/ttyUSB1') 
+def handle_frame(frame):
+    # This function will be called for each captured frame
+    # Here you can analyze or forward the frame as needed
+    #print source and destination mac address
+    if((frame.src).lower() == "00:18:3e:01:eb:3a"):
+        print(frame.summary())
+        print("Source MAC: " + frame.src)
+        try:
+            tosend = bytes(frame)
+            original_length = len(tosend)
+            tosend = tosend.ljust(1518, b'\0')  # pad with null bytes to 1500 bytes
+            tosend += original_length.to_bytes(2, 'big')  # append length at 1501st byte
+            ser.write(tosend)
+        except Exception as e:
+            print("Error writing to serial port")
+            print(e)
+
+sniff(iface="vethmp0", prn=handle_frame, store=False, lfilter=lambda x: x.haslayer(Ether))
+```
+
+2. Check if the source Mac Address is same as that of the FPGA/veth0.
+3. pad the frame to 1500 bytes will null bytes.
+4. append length again.
+5. send the packet through the UART serial COM port.
+
+> All the above is done under scapy itself.
+
+6. The interrupt is invoked and we check if the starting bytes of the received data starts from `\xFF` thing as seen in the diagram. which is what a Ethernet frame starts from.
+7. **This is particularly important**: Check if reception of a packet is in progress to not interfere with it, Though there are different Rx and Tx buffers for UARTlite, the driver has only one function to reset it, doing so clears both of it and we wouldn't want to interfere.
+8. The data is processed, frame is extracted and then sent through the ethernet interface through the emaclite drivers.
+
+```c
+void RecvHandler(void *CallBackRef, unsigned int EventData)
+{
+	if(EventData==TX_BUFFER_SIZE&&
+			TxBuffer[0]==0xFF&&
+			TxBuffer[1]==0xFF&&
+			TxBuffer[2]==0xFF&&
+			TxBuffer[3]==0xFF&&
+			TxBuffer[4]==0xFF&&
+			TxBuffer[5]==0xFF
+		){
+		FrameLength = ((u16)TxBuffer[TX_BUFFER_SIZE -2 ] << 8) | TxBuffer[TX_BUFFER_SIZE - 1];
+		if(FrameLength<XEL_MAX_FRAME_SIZE){
+			memcpy(TxFrame, TxBuffer, FrameLength);
+			FrameCaptured=1;
+			XUartLite_Recv(&UartLite, TxBuffer, TX_BUFFER_SIZE);
+            // Rest is handled in the code shown above in Reception section.xD
+		}
+	} else {
+        // invalid data, reset fifo and begin again?
+		XUartLite_ResetFifos(&UartLite);
+		XUartLite_Recv(&UartLite, TxBuffer, TX_BUFFER_SIZE); 
+	}
+}
+```
+
+Testing it out and this works!!!!!!
+
+## Combining Everything together
+
+Well we practically started enjoying. These components were separately present and working well, (though I've shown code here is from the combined). we kind of had a night left (yk who needs sleep). Join it together and it should be done, right?
+
+We felt like this:
+
+![winning son meme](/assets/img/other/smart-nic-fpga/winning.png)
+
+After some time spent at night canteen, We actually started this work. Just add all the funcs together and boom.
+
+To test this out, we tried pinging host(`192.168.1.11`) from our veth(`192.168.1.10`).
+
+The output:
+
+![final output](/assets/img/other/smart-nic-fpga/final.jpeg)
+
+Looks like it's working, But it actually wasn't. This is what we got when we ran `ping`, instead of ICMP echos, all we had were repeating ARP packets. 
+
+Upon inspecting with wireshark, we could clearly see that the packets sent from fpga to the host via UART were definitely malformed.
+![final output](/assets/img/other/smart-nic-fpga/wireshark_err.jpeg)
+
+After a lot of thoughts and deepfull discussions, considering that we needed to make a report as well as a presentation and that we had to give the FPGA back after it. We successfully **Rage Quitted**. 
+
+
+-------
+
+We kinda followed or have seen a lot of resources, Lost most of them in the process. But here are some if not already mentioned above, in no particular order:
+
+1. NITK's CSE Dept Open Source Networking Technology Course Notes for working with veth's and namespaces.
+2. https://digilent.com/reference/learn/programmable-logic/tutorials/nexys-4-ddr-getting-started-with-microblaze-servers/start?redirect=1
+3. https://forum.digilent.com/topic/4753-multiple-uartlite-instantiation-w-microblaze/
+4. https://github.com/NetFPGA/NetFPGA-SUME-public/wiki/NetFPGA-SUME-TCAM-IPs
+5. https://xilinx.github.io/embeddedsw.github.io/emaclite/doc/html/api/example.html
+6. https://xilinx.github.io/embeddedsw.github.io/emaclite/doc/html/api/index.html
+7. https://insights.sei.cmu.edu/blog/how-to-build-a-trustworthy-freelibre-linux-capable-64-bit-risc-v-computer/
+8. https://people.ece.cornell.edu/land/courses/ece5760/FinalProjects/f2011/mis47_ayg6/mis47_ayg6/index.html
+9. https://gist.github.com/austinmarton/2862515
+10. https://support.xilinx.com/s/question/0D54U00005WcW1LSAV/etherner-raw-data-sniffing?language=en_US
+11. https://support.xilinx.com/s/question/0D52E00006hpiOxSAI/anyone-tried-using-lwip-to-send-raw-ethernet-frames-with-custom-ethertype?language=en_US
+12. https://www.youtube.com/watch?v=pkDWzG8spvg&t=1145s
+13. https://docs.amd.com/r/2.2-English/pg318-tcam/Introduction
+14. https://github.com/dchammond/eth_debug
+15. https://github.com/rprinz08/hBPF
