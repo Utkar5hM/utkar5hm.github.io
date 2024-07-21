@@ -12,14 +12,14 @@ $tab-count: {{ site.tabs | size | plus: 1 }}; // plus 1 for home tab
 /* append your custom style below */
 
 
-#main-wrapper {
-  background: url("/assets/about/saber.jpg") no-repeat fixed center/cover;
-}
+// #main-wrapper {
+//   background: url("/assets/about/saber.jpg") no-repeat fixed center/cover;
+// }
 
 @media (max-width: 767px) {
-  #main-wrapper {
-    background: url("/assets/about/saber-m2.png") no-repeat fixed top center;
-    }
+  // #main-wrapper {
+  //   background: url("/assets/about/saber-m2.png") no-repeat fixed top center;
+  //   }
     #main-wrapper::before {
       background-color: rgba(24, 23, 23, 0.664); /* Change opacity value as needed */
     }
