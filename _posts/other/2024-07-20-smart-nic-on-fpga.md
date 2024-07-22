@@ -103,7 +103,7 @@ Note: We've had a fantastic discovery of a skill issue on our end to not read th
 
 ### Drivers??
 
-We need drivers as well, right? We are writing them in C during the very last week of the deadline while the end-semester exams are going on. Ngl, the brain wasn't braining, especially when we had to write drivers for the UART interface to act as an ethernet interface. Additionally, Watching tuts like this [Youtube](https://www.youtube.com/watch?v=dSvhys-bppI), we were probably more cooked than the Crowdstrike employee who pushed that code online without testing; he at least probably had/will have his degree with him.
+We need drivers as well, right? We are writing them in C during the very last week of the deadline while the end-semester exams are going on. Ngl, the brain wasn't braining, especially when we had to write drivers for the UART interface to act as an ethernet interface. Additionally, Watching tuts like this [Youtube](https://www.youtube.com/watch?v=dSvhys-bppI), no cap, we were cooked.
 
 Luckily, the most crucial objective of the project was the **1st** mentioned one, which required us to get something working to show. So, instead of writing drivers, We came up with the following:
 
