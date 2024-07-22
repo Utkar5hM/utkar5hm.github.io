@@ -8,7 +8,7 @@ tags: [guide, linux, fpga, verilog, veriloghdl, namespaces, veth, microblaze, c,
 [Project Github Link](https://github.com/Utkar5hM/fpga-based-packet-processing-unit)
 
 
-Hey there, folks; I'm writing here after a long aff time. In this lore, I will discuss how we implemented our smart NIC on an FPGA. This was my final year major project that I did with my fellow bros ([Chinnmay](https://www.linkedin.com/in/chinmay-sharma-9a68b8200/) & [Muthukumar](https://www.linkedin.com/in/muthuku37/)). The idea for the project popped into our faces like acne due to our exposure to XDP/eBPF without sunscreen. We wanted to do some hardware offloading, but due to unforeseen situations, things took a turn.
+Hey there, folks; I'm writing here after a long aff time. In this lore, I will discuss how we implemented our smart NIC on an FPGA. This was my final year major project that I did with my fellow bros ([Chinmay](https://www.linkedin.com/in/chinmay-sharma-9a68b8200/) & [Muthukumar](https://www.linkedin.com/in/muthuku37/)). The idea for the project popped into our faces like acne due to our exposure to XDP/eBPF without sunscreen. We wanted to do some hardware offloading, but due to unforeseen situations, things took a turn.
 
 The project aimed to do several things initially:
 
