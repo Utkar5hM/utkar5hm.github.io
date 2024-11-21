@@ -13,6 +13,8 @@ Once my summer internship wrapped up and I had some breathing room, I decided to
 
 So, I finally decided revisiting it to see if it’s actually any good.
 
+[Project Github Link](https://github.com/Utkar5hM/mariadb-ebpf-exporter)
+
 Before starting the comparison, Let's first see what the program does and how it works. The mariadb/mysql ebpf exporter collects query latencies as so the name suggests by hooking into the initial query execution funcition which is named `dispatch_command()`(_in both mysql/mariadb. but they act differently, very demure_) and then kind of normalizes the query in order to help us categorize similar query into a group, followed by exporting this data in form of prometheus metrics which can be collected by a prometheus server and then further beautifully visualized by Grafana.
 
 I've used libbpfgo for building the program especially due to the CORE(compile once run everywhere) functionality of it and also because I wanted to use Golang for the userspace side of the program. Well, :3 there was a caveat that the compiled mariadb/mysql versions available have mangled function names and libbpfgo cannot go and find the mangled one and hook into it like bpftrace can(at least I didn't know any way), so I created a build script that would utilize `nm` tool to find the function name in the db's binary and store it and compile our bpf binary to hook to it. which is then embedded into the go program with go's `embed` lib. so after this, we can be sure that it would always run with the db version it was compiled for.
