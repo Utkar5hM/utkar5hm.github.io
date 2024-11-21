@@ -80,7 +80,7 @@ This drastically changed when I filtered for queries with latency over 200ms—C
 
 ### Results
 
-I ran each test three times, averaged the numbers, so It would be easy to look at. You can dig into the full results [here](/assets/other/ebpf-perf/).
+I ran each test three times, averaged the numbers, so It would be easy to look at. You can dig into the full results [here](https://github.com/Utkar5hM/utkar5hm.github.io/tree/main/assets/other/ebpf-perf/sysbenchscripts).
 
 Now, here are the benchmark results:
 
