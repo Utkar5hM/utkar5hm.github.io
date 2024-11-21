@@ -69,6 +69,10 @@ An example of how the query latency measured would look like:
 
 Okay bet, so I had the [Process Exporter](https://github.com/ncabatoff/process-exporter) running, logging CPU and memory usage like a pro, but I lowkey fumbled and missed the Prometheus retention window. No screenshots, no backup but just vibe.  You’re gonna have to trust me on this one fr.
 
+### System Configuration
+
+2 GCP Instances with following configuration: `e2-standard-2 (2 vCPU, 1 core, 8 GB memory) - OS: Debian`
+
 ## Benchmarking
 
 So I kicked things off with my eBPF exporter grabbing 0ms latency queries, and bruh, the exporter was just hogging CPU and memory like it was the main character.
