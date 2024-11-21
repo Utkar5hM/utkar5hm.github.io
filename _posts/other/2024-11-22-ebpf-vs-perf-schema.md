@@ -25,7 +25,7 @@ Now that we know the capabilities of the program, We need to know how it impacts
 
 There are some thing to consider before we begin testing this thing out.
 - query fingerprinting/normalization uses regex and it is intensive. So it might be one of the reasons why the performance might take a lot of hit. One interesting thing that could be done to solve this (if it is), would be to transfer data to another system first and then normalize/export.
-- The program I've written could be just dog shit / has some issues even though I might've tried to make it not to be. I've barely had ever used golang before so ..
+- The program I've written could be just baddd even though I might've tried to make it not to be.
 
 I thought it would also be pretty interesting to see how the program would behave when I only try to collect slower queries, like say greater than 200ms or 1000ms, kind of makes sense, right? So, I've done that here but the above linked comparison blog by percona explains why it is not such a good idea to do so and It would be better for you to have a read through it to understand why. It would be pretty interesting to try out their explained better approach and see how that performs as well but maybe another time.
 
