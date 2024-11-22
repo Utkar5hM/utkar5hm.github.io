@@ -75,7 +75,7 @@ Okay bet, so I had the [Process Exporter](https://github.com/ncabatoff/process-e
 
 ## Benchmarking
 
-So I kicked things off with my eBPF exporter grabbing 0ms latency queries, and bruh, the exporter was just hogging CPU and memory like it was the main character.
+So I kicked things off with my eBPF exporter grabbing 0ms latency queries, and bruh, the exporter was just hogging CPU like it was the main character.
 
 ![htop-ss](/assets/img/other/ebpf-perf/htop.jpeg)
 
