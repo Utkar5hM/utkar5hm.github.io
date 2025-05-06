@@ -23,7 +23,7 @@ timezone: Asia/Kolkata
 
 title: Utkar5hM # the main title
 
-tagline: "I'm just a 🐟!" # it will display as the sub-title
+tagline: "Ssuppp!! 🐟" # it will display as the sub-title
 
 description: >- # used by seo meta and the atom feed
   Hi there! I'm Utkarsh, a B.Tech ECE student at NITK Surathkal, passionate about infosec, CTFs, development and tweaking with systems.:) A.K.A Utkar5hM
@@ -82,7 +82,7 @@ theme_mode: dark
 img_cdn:
 
 # the avatar on sidebar, support local or CORS resources
-avatar: assets/about/profile.jpg
+avatar: assets/about/profile.jpeg
 
 # boolean type, the global switch for ToC in posts.
 toc: true
