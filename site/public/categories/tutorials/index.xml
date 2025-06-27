@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tutorials on Utkarsh M</title>
+    <link>http://localhost:1313/categories/tutorials/</link>
+    <description>Recent content in Tutorials on Utkarsh M</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <atom:link href="http://localhost:1313/categories/tutorials/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Adding Hotstpot/AP mode support for MT7921 on Linux (stock / linux-g14 kernel)</title>
+      <link>http://localhost:1313/other/2022-05-27-hotspot/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/other/2022-05-27-hotspot/</guid>
+      <description>&lt;p&gt;Since the current Linux kernel drivers for MT7921 doesn’t support Monitor mode, I couldn’t enable the wifi hotspot through my Zephyrus G14 on Linux. So I found out that there is a patch available for the drivers which might come out on later Linux kernel releases. If you want, you can wait for the time being or try compiling the kernel with the patch by yourselves.&lt;/p&gt;&#xA;&lt;p&gt;I will be showing you on how to apply the patch over both the stock and linux-g14 kernel. I’m using Arch Linux on Zephyrus-G14 GA401QH. applying the patch on stock firmware should most probably work for other laptops with MT7921 and could be performed similarly for other distros.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Building a Smart Network Interface Card on FPGA – Major Project Edition</title>
+      <link>http://localhost:1313/other/2024-07-20-smart-nic-on-fpga/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/other/2024-07-20-smart-nic-on-fpga/</guid>
+      <description>&lt;p&gt;&lt;a href=&#34;https://github.com/Utkar5hM/fpga-based-packet-processing-unit&#34;&gt;Project GitHub Link&lt;/a&gt;&lt;/p&gt;&#xA;&lt;p&gt;In this post, I’ll walk through how we built a Smart NIC on an FPGA as part of our final-year major project. This project was developed with my teammates &lt;a href=&#34;https://www.linkedin.com/in/chinmay-sharma-9a68b8200/&#34;&gt;Chinmay&lt;/a&gt; and &lt;a href=&#34;https://www.linkedin.com/in/muthuku37/&#34;&gt;Muthukumar&lt;/a&gt;. The concept stemmed from our prior exposure to XDP/eBPF, which led us to explore hardware offloading. While our initial goals were ambitious, the timeline and complexity forced us to adapt along the way.&lt;/p&gt;&#xA;&lt;hr&gt;&#xA;&lt;h2 id=&#34;project-objectives&#34;&gt;Project Objectives&lt;/h2&gt;&#xA;&lt;p&gt;Originally, the project aimed to:&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

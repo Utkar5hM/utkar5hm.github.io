@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Building a Smart Network Interface Card on FPGA – Major Project Edition | Utkarsh M</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/fonts.css" />
+    
+  </head>
+
+  <body>
+    <header class="site-title-main">
+      Utkarsh M
+    </header>
+    <nav>
+    <ul class="menu">
+      
+      <li><a href="/">Home</a></li>
+      
+      <li><a href="/about/">About</a></li>
+      
+      <li><a href="/categories/">Categories</a></li>
+      
+      <li><a href="/tags/">Tags</a></li>
+      
+      <li><a href="/index.xml">Subscribe</a></li>
+      
+    </ul>
+    <hr/>
+    </nav>
+
+<div class="post-container">
+  <div class="post-date">2022/05/02</div>
+  <h1 class="post-title">Building a Smart Network Interface Card on FPGA – Major Project Edition</h1>
+</div>
+
+<main>
+<hr>
+<h2 id="tags-guide-linux-fpga-verilog-veriloghdl-namespaces-veth-microblaze-c-axi">title: Building a Smart Network Interface Card on FPGA – Major Project Edition
+date: 2024-07-20 00:00:00 +530
+categories: [Guides, Tutorials]
+tags: [guide, linux, fpga, verilog, veriloghdl, namespaces, veth, microblaze, c, axi]</h2>
+<p><a href="https://github.com/Utkar5hM/fpga-based-packet-processing-unit">Project GitHub Link</a></p>
+<p>In this post, I’ll walk through how we built a Smart NIC on an FPGA as part of our final-year major project. This project was developed with my teammates <a href="https://www.linkedin.com/in/chinmay-sharma-9a68b8200/">Chinmay</a> and <a href="https://www.linkedin.com/in/muthuku37/">Muthukumar</a>. The concept stemmed from our prior exposure to XDP/eBPF, which led us to explore hardware offloading. While our initial goals were ambitious, the timeline and complexity forced us to adapt along the way.</p>
+<hr>
+<h2 id="project-objectives">Project Objectives</h2>
+<p>Originally, the project aimed to:</p>
+<ol>
+<li>Implement a NIC in Verilog, optionally integrating existing cores like <a href="https://github.com/enjoy-digital/liteeth">LiteEth</a>.</li>
+<li>Interface the NIC with a host using PCIe or UART.</li>
+<li>Incorporate offload logic for packet processing directly into the NIC.</li>
+<li>Write C drivers for the NIC on a Linux host.</li>
+</ol>
+<p>The architecture concept:</p>
+<p><img src="/assets/img/other/smart-nic-fpga/arch.png" alt="architecture"></p>
+<hr>
+<h2 id="constraints--course-corrections">Constraints &amp; Course Corrections</h2>
+<p>Due to procurement delays and tight timelines, we adapted our approach:</p>
+<ul>
+<li>Used <strong>Nexys 4 DDR</strong> (limited to 100 Mbps Ethernet and UART communication).</li>
+<li>Switched from pure Verilog implementation to <strong>MicroBlaze soft processor</strong> for control logic.</li>
+<li>Utilized C to implement transmission, reception, and firewall logic.</li>
+<li>Replaced hardware offload logic with IP blocks like TCAM (where feasible).</li>
+</ul>
+<p>Despite the pivots, the experience turned out to be an excellent hands-on learning exercise in Verilog, C, and system integration with FPGAs.</p>
+<hr>
+<h2 id="working-with-nexys-4-ddr-and-microblaze">Working with Nexys 4 DDR and MicroBlaze</h2>
+<p>We followed the guide <a href="https://digilent.com/reference/learn/programmable-logic/tutorials/nexys-4-ddr-getting-started-with-microblaze-servers/start?redirect=1">Getting Started with MicroBlaze Servers</a>, which uses a prebuilt TCP echo server and the LWIP stack.</p>
+<p>However, newer versions of Vivado don’t include the MII to RMII bridge IP required for the Nexys 4 DDR’s Ethernet. We used <strong>Vivado 2019</strong> to address this, and uploaded the necessary IP to our GitHub repository for future reuse.</p>
+<p>By following the steps in the guide and SDK setup, we achieved a basic working TCP echo server:</p>
+<p><img src="/assets/img/other/smart-nic-fpga/bd1.png" alt="bd1"><br>
+<img src="/assets/img/other/smart-nic-fpga/echosvr.png" alt="echosvr"></p>
+<hr>
+<h2 id="capturing-ethernet-frames">Capturing Ethernet Frames</h2>
+<p>The LWIP stack internally uses <strong>EmacLite</strong> drivers. After reviewing its documentation, we implemented packet capture using <strong>polling mode</strong> (preferred for performance, similar to DPDK).</p>
+<p>We based our logic on the <a href="https://github.com/Xilinx/embeddedsw/blob/master/XilinxProcessorIPLib/drivers/emaclite/examples/xemaclite_ping_reply_example.c">ping reply example</a> and extended it for deeper packet inspection.</p>
+<p><img src="/assets/img/other/smart-nic-fpga/ethframe.png" alt="ethframe"></p>
+<hr>
+<h2 id="host-fpga-communication-via-uart">Host-FPGA Communication (via UART)</h2>
+<p>We used <strong>UARTLite</strong> for serial data transfer. Due to MicroBlaze&rsquo;s lack of multithreading, we assigned EmacLite to polling mode and UARTLite to interrupt-driven mode.</p>
+<p>To support UART interrupts, we updated the block diagram and added the necessary concat logic:</p>
+<p><img src="/assets/img/other/smart-nic-fpga/bdmid.jpeg" alt="bdmid"></p>
+<p>Note: Later we realized EmacLite polling is non-blocking, making parts of this setup redundant—but the learning was valuable.</p>
+<hr>
+<h2 id="avoiding-kernel-driver-development">Avoiding Kernel Driver Development</h2>
+<p>Instead of writing a full Ethernet driver in C, we used <strong>Linux namespaces</strong> and <strong>virtual Ethernet (veth) interfaces</strong> to simulate packet flow. This made testing easier and eliminated the need for a second physical host.</p>
+<p>We configured the setup as follows:</p>
+<ul>
+<li>Used a veth pair (<code>vethmp0</code>, <code>vethmp1</code>) in separate namespaces.</li>
+<li>Matched MAC/IP of <code>vethmp0</code> with FPGA&rsquo;s Ethernet interface.</li>
+<li>Used <strong>Scapy</strong> for sending/receiving packets.</li>
+</ul>
+<p>Example setup script:</p>
+<pre><code class="language-bash">ip netns add mp_nwk2
+ip link add vethmp0 type veth peer name vethmp1
+ip link set vethmp1 netns mp_nwk2
+...
+ip netns exec mp_nwk1 python veth2uart.py
+</code></pre>
+<hr>
+<h2 id="offloading-with-tcam-firewall-logic">Offloading with TCAM (Firewall Logic)</h2>
+<p>We used <strong>TCAM (Ternary Content-Addressable Memory)</strong> for fast IP matching in firewall logic. Due to licensing issues with commercial IPs, we integrated an open-source Verilog TCAM: <a href="https://github.com/mcjtag/tcam">mcjtag/tcam</a>.</p>
+<p>To make it work with MicroBlaze, we wrapped it in an <strong>AXI Lite slave interface</strong>, letting the processor communicate with it through memory-mapped I/O.</p>
+<p>Useful learning references:</p>
+<ul>
+<li><a href="https://zipcpu.com/blog/2020/03/08/easyaxil.html">ZipCPU AXI Lite tutorial</a></li>
+<li><a href="https://www.youtube.com/watch?v=BONXPKXyJTk">AXI wrapper creation YouTube guide</a></li>
+</ul>
+<p>Block diagram:</p>
+<p><img src="/assets/img/other/smart-nic-fpga/axitcam.jpeg" alt="axitcam"><br>
+Final integrated diagram:</p>
+<p><img src="/assets/img/other/smart-nic-fpga/bdf.jpeg" alt="bdf"></p>
+<hr>
+<h2 id="writing-c-drivers-for-axi-ip">Writing C Drivers for AXI IP</h2>
+<p>Using the auto-generated AXI templates, we wrote drivers to:</p>
+<ul>
+<li>Insert entries into TCAM</li>
+<li>Query and extract matched values</li>
+</ul>
+<p>Custom functions like <code>ECEMPTCAMIP_SetKey</code>, <code>ECEMPTCAMIP_GetKey</code>, and value extractors were added. A complete testbench verified functionality.</p>
+<p>Example result:</p>
+<p><img src="/assets/img/other/smart-nic-fpga/TCAM_IP.jpg" alt="TCAM_IP.jpg"></p>
+<hr>
+<h2 id="ethernet-frame-reception-logic">Ethernet Frame Reception Logic</h2>
+<p>Diagram:</p>
+<p><img src="/assets/img/other/smart-nic-fpga/det_reception.jpeg" alt="det_reception"></p>
+<p>Flow:</p>
+<ol>
+<li>Poll EmacLite for frames.</li>
+<li>If Ethertype = IPv4, extract IP.</li>
+<li>Run IP through TCAM.</li>
+<li>If allowed, prepend size and send via UART.</li>
+</ol>
+<p>Python Scapy script to read UART:</p>
+<pre><code class="language-python">import serial
+from scapy.all import Ether, sendp
+ser = serial.Serial('/dev/ttyUSB1')
+...
+sendp(frame, iface=&quot;vethmp0&quot;)
+</code></pre>
+<p>Test result:</p>
+<p><img src="/assets/img/other/smart-nic-fpga/receptest.jpeg" alt="receptest"></p>
+<hr>
+<h2 id="ethernet-frame-transmission">Ethernet Frame Transmission</h2>
+<p>Diagram:</p>
+<p><img src="/assets/img/other/smart-nic-fpga/Transmission.jpg" alt="Transmission.jpg"></p>
+<p>Flow:</p>
+<ol>
+<li>Use Scapy to sniff packets on <code>vethmp0</code>.</li>
+<li>If source MAC matches FPGA, serialize, pad, append size, send via UART.</li>
+</ol>
+<pre><code class="language-python">from scapy.all import sniff, Ether
+import serial
+...
+ser.write(tosend)
+</code></pre>
+<p>On the FPGA, UART interrupt handler extracts the frame and sends via EmacLite.</p>
+<p>Test result:</p>
+<p><img src="/assets/img/other/smart-nic-fpga/veth2uart.jpeg" alt="veth2uart.jpeg"></p>
+<hr>
+<h2 id="final-integration--testing">Final Integration &amp; Testing</h2>
+<p>We integrated all modules and ran tests. While pings resulted in ARP requests and partial success, malformed packets appeared in Wireshark.</p>
+<p><img src="/assets/img/other/smart-nic-fpga/final.jpeg" alt="final.jpeg"><br>
+<img src="/assets/img/other/smart-nic-fpga/wireshark_err.jpeg" alt="wireshark_err.jpeg"></p>
+<p>Despite that, the overall project provided valuable insights into FPGA-based NIC design and AXI integration.</p>
+<hr>
+<h2 id="acknowledgments--resources">Acknowledgments &amp; Resources</h2>
+<p>Key references used during development:</p>
+<ol>
+<li><a href="https://www.linkedin.com/in/ACoAADMaz7wBukhl_Dsrd93MskvZwKDe93P5V6Q">Inbasekaran Perumal</a></li>
+<li><a href="https://digilent.com/reference/learn/programmable-logic/tutorials/nexys-4-ddr-getting-started-with-microblaze-servers/start?redirect=1">Digilent MicroBlaze Server Guide</a></li>
+<li><a href="https://xilinx.github.io/embeddedsw.github.io/emaclite/doc/html/api/example.html">Xilinx EmacLite Examples</a></li>
+<li><a href="https://github.com/NetFPGA/NetFPGA-SUME-public/wiki/NetFPGA-SUME-TCAM-IPs">NetFPGA TCAM IP</a></li>
+<li><a href="https://www.youtube.com/watch?v=EjnH-CgOp2g">MicroBlaze AXI IP Tutorials</a></li>
+<li><a href="https://zipcpu.com/blog/2020/03/08/easyaxil.html">AXI Lite Easy Tutorial</a></li>
+<li>Many others linked throughout the blog&hellip;</li>
+</ol>
+<hr>
+<p>We hope this guide serves as a helpful starting point for anyone aiming to build basic NICs or network offload modules using FPGA hardware. While not production-grade, the learnings and techniques can be built upon for more sophisticated systems.</p>
+
+</main>
+
+  <footer>
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+<script src="//cdn.jsdelivr.net/npm/@xiee/utils/js/math-code.min.js" defer></script>
+<script src="//cdn.jsdelivr.net/npm/katex/dist/katex.min.js" defer></script>
+<script src="//cdn.jsdelivr.net/npm/katex/dist/contrib/auto-render.min.js" defer></script>
+<script src="//cdn.jsdelivr.net/npm/@xiee/utils/js/render-katex.js" defer></script>
+
+<script src="//cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.min.js" defer></script>
+
+  
+  <hr/>
+  © <a href="https://yihui.org">Yihui Xie</a> 2017 &ndash; 2025 | <a href="https://github.com/yihui">Github</a> | <a href="https://twitter.com/xieyihui">Twitter</a>
+  
+  </footer>
+  </body>
+</html>
+

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Linux, , Ebpf, Mariadb, Mysql, Grafana, Performance_schema, Query, Golang, Go on A minimal Hugo website</title>
+    <link>http://localhost:1313/tags/linux--ebpf-mariadb-mysql-grafana-performance_schema-query-golang-go/</link>
+    <description>Recent content in Linux, , Ebpf, Mariadb, Mysql, Grafana, Performance_schema, Query, Golang, Go on A minimal Hugo website</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 22 Nov 2024 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/linux--ebpf-mariadb-mysql-grafana-performance_schema-query-golang-go/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Performance Schema vs eBPF-based Query Profiling</title>
+      <link>http://localhost:1313/post/2024/11/22/performance-schema-vs-ebpf-based-query-profiling/</link>
+      <pubDate>Fri, 22 Nov 2024 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/post/2024/11/22/performance-schema-vs-ebpf-based-query-profiling/</guid>
+      <description>&lt;p&gt;So, it all started at IRIS NITK, where I had the chance to work with some seriously cracked individuals, and we were testing out different distributed strategies for MariaDB. While I didn’t have a ton of time to dive super deep, I was picking up some gems here and there. The real kicker? A bunch of the guys were working on eBPF-based tools for their own projects/academics, and that’s where I first got exposed to eBPF. Safe to say, the tech rizz was strong.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

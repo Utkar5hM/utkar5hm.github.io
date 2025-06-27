@@ -1,0 +1,50 @@
+baseurl: "https://utkar5hm.github.io/"  # please update this to your actual URL
+languageCode: "en-us"
+title: "Utkarsh M"
+theme: "theme"
+googleAnalytics: ""
+disqusShortname: ""
+ignoreFiles: ["\\.Rmd$", "\\.Rmarkdown$", "_cache$"]
+footnotereturnlinkcontents: "↩"
+
+permalinks:
+  note: "/note/:year/:month/:day/:slug/"
+  post: "/posts/:slug/"
+
+menu:
+  main:
+    - name: Home
+      url: ""
+      weight: 1
+    - name: Posts
+      url: "post/"
+      weight: 2
+    - name: Categories
+      url: "categories/"
+      weight: 3
+    - name: About
+      url: "about/"
+      weight: 4
+
+params:
+  description: "A website built through Hugo and blogdown."
+  footer: "&copy; [Utkarsh M](https://utkar5hm.github.io) 2025 -- {Year} | [Github](https://github.com/Utkar5hM) | [Linkedin](https://www.linkedin.com/in/utkar5hm/)"
+
+markup:
+  highlight:
+    codeFences: false
+  goldmark:
+    renderer:
+      unsafe: true
+    extensions:
+      passthrough:
+        enable: true
+        delimiters:
+          block:
+          - - \[
+            - \]
+          - - $$
+            - $$
+          inline:
+          - - \(
+            - \)
