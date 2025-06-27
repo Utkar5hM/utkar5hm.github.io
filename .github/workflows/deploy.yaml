@@ -69,7 +69,7 @@ jobs:
             --gc \
             --minify \
             --source site \
-            --destination public/ \
+            --destination ../public/ \
             --baseURL "${{ steps.pages.outputs.base_url }}/" \
             --cacheDir "${{ runner.temp }}/hugo_cache"
       - name: Cache Save
