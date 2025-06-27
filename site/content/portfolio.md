@@ -51,8 +51,10 @@ Served as a maintainer and contributed to the development of a Django-based plat
 
 ### MySQL/MariaDB Query Profiler _(Aug 2023 - Sep 2023)_
 An eBPF-powered Prometheus exporter for real-time query tracing and latency monitoring.
-- Benchmarked against Performance Schema, achieving 18% higher throughput.
+- Benchmarked against Performance Schema using sysbench.
 - Enabled probe attachment to live Docker containers using Linux namespaces.
+- Live Grafana dashboard for visualizing query performance metrics.
+- Easy to use container based Makefile for compilation and deployment.
 
 **Tech:** Go, C, Libbpfgo, Bash, Docker, Make
 
