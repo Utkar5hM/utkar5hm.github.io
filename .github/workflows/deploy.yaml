@@ -20,7 +20,10 @@ jobs:
           extended: true
 
       - name: Build
-        run: hugo --minify --source exampleSite --theme ../../ --destination ../public
+        run: hugo --minify --source exampleSite --theme ../../
+
+      - name: Add .nojekyll
+        run: echo "" > public/.nojekyll
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v3
