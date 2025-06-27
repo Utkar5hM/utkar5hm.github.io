@@ -1,7 +1,7 @@
 baseurl: "https://example.org/"  # please update this to your actual URL
 languageCode: "en-us"
-title: "A minimal Hugo website"
-theme: "hugo-xmin"
+title: "Utkarsh M"
+theme: "blog"
 googleAnalytics: ""
 disqusShortname: ""
 ignoreFiles: ["\\.Rmd$", "\\.Rmarkdown$", "_cache$"]
@@ -9,7 +9,7 @@ footnotereturnlinkcontents: "↩"
 
 permalinks:
   note: "/note/:year/:month/:day/:slug/"
-  post: "/post/:year/:month/:day/:slug/"
+  post: "/posts/:slug/"
 
 menu:
   main:

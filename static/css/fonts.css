@@ -1,7 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Space+Mono:wght@400;700&display=swap');
+
 body {
-  font-family: Optima, Candara, Calibri, Arial, sans-serif;
+  font-family: 'Inter', Arial, sans-serif;
 }
 code {
-  font-family: "Lucida Console", Monaco, monospace;
-  font-size: 85%;
+  font-family: 'Space Mono', 'JetBrains Mono', 'Fira Mono', 'IBM Plex Mono', 'Fira Code', 'Source Code Pro', Consolas, 'Lucida Console', Monaco, monospace;
+  font-size: 95%;
 }
