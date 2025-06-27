@@ -19,9 +19,9 @@ tags:
 
 ---
 
-During my time at IRIS NITK, I had the opportunity to work with a talented group of peers exploring distributed strategies for MariaDB. While I couldn’t dive deeply into every aspect, I gained valuable exposure, particularly to eBPF, which several colleagues were using for research and internal tools. That sparked my interest in the technology.
+During my time at IRIS NITK, I had the opportunity to work with a talented group of peers, While I was  exploring distributed strategies for MariaDB with a friend of mine. While I couldn’t dive deeply into every aspect, I gained valuable exposure, particularly to eBPF, which several guys were using for their own research and internal tools.
 
-After completing my internship, I began building an eBPF based monitoring tool to understand the space better. Although the initial version was completed, I didn’t revisit it for over a year.
+After completing my summer internship at Oracle, I began building an eBPF based monitoring tool to understand the it better. Although the initial version was completed, I didn’t revisit it for over a year.
 
 Recently, I decided to revisit the tool and evaluate its performance and usefulness.
 
