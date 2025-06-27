@@ -16,6 +16,27 @@
       <description></description>
     </item>
     <item>
+      <title>HackTheBox</title>
+      <link>http://localhost:1313/categories/hackthebox/</link>
+      <pubDate>Mon, 02 Jan 2023 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/categories/hackthebox/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>CTFs</title>
+      <link>http://localhost:1313/categories/ctfs/</link>
+      <pubDate>Sun, 18 Dec 2022 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/categories/ctfs/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>TryHackMe</title>
+      <link>http://localhost:1313/categories/tryhackme/</link>
+      <pubDate>Tue, 12 Jul 2022 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/categories/tryhackme/</guid>
+      <description></description>
+    </item>
+    <item>
       <title>Guide</title>
       <link>http://localhost:1313/categories/guide/</link>
       <pubDate>Mon, 02 May 2022 00:00:00 +0000</pubDate>
