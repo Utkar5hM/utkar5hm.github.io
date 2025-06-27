@@ -16,21 +16,19 @@ menu:
     - name: Home
       url: ""
       weight: 1
-    - name: About
-      url: "about/"
+    - name: Posts
+      url: "post/"
       weight: 2
     - name: Categories
       url: "categories/"
       weight: 3
-    - name: Tags
-      url: "tags/"
+    - name: About
+      url: "about/"
       weight: 4
-    - name: Subscribe
-      url: "index.xml"
 
 params:
   description: "A website built through Hugo and blogdown."
-  footer: "&copy; [Yihui Xie](https://yihui.org) 2017 -- {Year} | [Github](https://github.com/yihui) | [Twitter](https://twitter.com/xieyihui)"
+  footer: "&copy; [Utkarsh M](https://utkar5hm.github.io) 2025 -- {Year} | [Github](https://github.com/Utkar5hM) | [Linkedin](https://www.linkedin.com/in/utkar5hm/)"
 
 markup:
   highlight:
