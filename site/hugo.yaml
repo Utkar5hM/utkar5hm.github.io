@@ -22,8 +22,8 @@ menu:
     - name: Categories
       url: "categories/"
       weight: 3
-    - name: About
-      url: "about/"
+    - name: Portfolio
+      url: "portfolio/"
       weight: 4
 
 params:
