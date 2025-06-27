@@ -1,6 +1,6 @@
 baseurl: "https://utkar5hm.github.io/"  # please update this to your actual URL
 languageCode: "en-us"
-title: "Utkarsh M"
+title: "Utkar5hM"
 theme: "theme"
 googleAnalytics: ""
 disqusShortname: ""
@@ -24,8 +24,8 @@ menu:
       weight: 3
 
 params:
-  description: "A website built through Hugo and blogdown."
-  footer: "&copy; [Utkarsh M](https://utkar5hm.github.io) 2025 -- {Year} | [Github](https://github.com/Utkar5hM) | [Linkedin](https://www.linkedin.com/in/utkar5hm/)"
+  description: "Utkarsh M's portfolio and blog: infosec, CTFs, development, tech and more."
+  footer: "&copy; [Utkar5hM](https://utkar5hm.github.io) 2025 -- {Year} | [Github](https://github.com/Utkar5hM) | [Linkedin](https://www.linkedin.com/in/utkar5hm/)"
 
 markup:
   highlight:
