@@ -24,7 +24,7 @@ menu:
       weight: 3
 
 params:
-  description: "Utkarsh M's portfolio and blog: infosec, CTFs, development, tech and more."
+  description: "Utkarsh M: infosec, CTFs, development, tech and more."
   footer: "&copy; [Utkar5hM](https://utkar5hm.github.io) 2025 -- {Year} | [Github](https://github.com/Utkar5hM) | [Linkedin](https://www.linkedin.com/in/utkar5hm/)"
 
 markup:

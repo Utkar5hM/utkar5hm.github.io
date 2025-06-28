@@ -2,7 +2,7 @@
 title: Home
 ---
 
-# Hi there!! 👋
+# Hi there!
 
 I'm **Utkarsh**, an Applications Developer I at Oracle and a B.Tech ECE graduate from NITK Surathkal, passionate about infosec, CTFs, development, and tweaking with systems. :)
 
