@@ -1,5 +1,5 @@
 ---
-title: Google CTF 2025 Writeup | Vibe RE - multiarch-1 
+title: Google CTF 2025 Writeup | RE - multiarch 1 
 slug: googlectf25-multiarch1
 author: Utkarsh M
 date: '2025-07-04'
@@ -17,22 +17,19 @@ tags:
 
 ---
 
+This is a write up for the multiarch1 reverse engineering challenge from Google CTF 2025. Although I registered, I could not play the CTF due to other plans, but I glanced over a few of the reverse engineering challenges and this one looked quite similar to yan85 based challenges I have solved previously on [pwn.college](https://pwn.college/), so I wanted to give it a try. Also, this is probably among the easiest since it had more than 60 solves at the time I checked.
 
-This is a write up for the multiarch1 reverse engineering challenge from Google CTF 2025. :V Though I registered, I couldn't play the ctf due to other plans but I had a glance over few of the reverse engineering challenges and this one looked pretty similar to yan85 based challenges I have solved previously on [pwn.college](https://pwn.college/) so I wanted to give this a try. :D Also This is probably the easiest one since It had more than 60 solves at the time I had a look. 
-
-
-### Challenge Details:
-
+### Challenge Details
 
 > Stacks are fun, registers are easy, but why do one when you can do both? Welcome to the multiarch.
 
 Connection string: `multiarch-1.2025.ctfcompetition.com 1337`
 
-files: `Dockerfile,  crackme.masm,  multiarch,  nsjail.cfg,  runner.py` 
+Files: `Dockerfile, crackme.masm, multiarch, nsjail.cfg, runner.py` 
 
 -------------------
 
-Analyzing the starting point  `runner.py`, we can see that a program multiarch is launched with crackme.masm as an argument. 
+Analyzing the starting point, `runner.py`, we can see that a program called multiarch is launched with crackme.masm as an argument. 
 
 ```sh
 python runner.py 
@@ -49,7 +46,6 @@ Seems like you have some learning to do!
 [I] executing program
 Welcome to the multiarch of madness! Let's see how well you understand it.
 Challenge 1 - What's your favorite number? 
-
 ```
 
 Analyzing crackme.masm:
@@ -63,38 +59,35 @@ Seems like you have some learning to do!
 Congrats! You are the Sorcerer Supreme of the multiarch!
 Challenge 1 - What's your favorite number? Challenge 2 - Tell me a joke: Challenge 3 - Almost there! But can you predict the future?
 What number am I thinking of? 
-
 ```
 
-everything kind of hints that `crackme.masm` is the shellcode that the multiarch runs.
+Everything suggests that `crackme.masm` is the shellcode that the multiarch runs.
 
 -------------------
 
 ## Analyzing multiarch
 
-let's have a look with ghidra, starting off with main function:
+Let us have a look with Ghidra, starting with the main function:
 
 ![](/assets/img/ctf/googlectf25/multiarch1-1.png)
 
+The first two functions seem clear. The second function that is called appears to be for main storage and pointers, but we are not really sure how they are being used at this point.
 
-The first 2 functions seem clear.  the 2nd function that is called seems to be for main storage and pointers and stuff but we're not really sure how they are being used at this point.
-
-Having a look at 3rd:
+Looking at the third function:
 
 ![alt text](/assets/img/ctf/googlectf25/multiarch1-2.png)
 
-Now we know that there are 2 vms and at each instruction it is decided based off of a function on whether it should be :D executed with `regVM` or `stackVM`.
+Now we know that there are two VMs and at each instruction it is decided, based on a function, whether it should be executed with `regVM` or `stackVM`.
 
-We still need to know a lot though and this program since huge aff, manually going through it would take more than a day, I recently had saw a tweet about ghidraMCP and thought, let's just try it out. 
+We still have a lot to learn, and since this program is very large, going through it manually would take more than a day. I recently saw a tweet about [ghidraMCP](https://github.com/LaurieWired/GhidraMCP) and thought I would try it out, it is 2025 after all.
 
-so configuring ghidraMCP with cline (sonent-3.5 free with github edu), I was able to analyze working of most of the functions and have them renamed inside ghidra.
+After configuring ghidraMCP with cline (sonent 3.5 free with GitHub edu), I was able to analyze the working of most of the functions and have them renamed inside Ghidra.
 
 ![alt text](/assets/img/ctf/googlectf25/multiarch1-3.png)
 
-### crackme.masm structure:
+### crackme.masm structure
 
-few more prompts and we had a rough sketch of how the `crackme.masm` is structured.
-
+After a few more prompts, we had a rough sketch of how the `crackme.masm` is structured.
 
 ```javascript
 [MASM][Seg1Hdr][Seg2Hdr][Seg3Hdr][Seg1Data][Seg2Data][Seg3Data]
@@ -103,13 +96,12 @@ few more prompts and we had a rough sketch of how the `crackme.masm` is structur
      4        9        0xE
 ```
 
-where 
+Where 
 
-segment header contains:
-- Type byte (1=Code, 2=Data, 3=Extra)
-- Offset (2 bytes) - Where segment data starts
-- Size (2 bytes) - Size of segment data
-
+The segment header contains:
+- Type byte (1 for Code, 2 for Data, 3 for Extra)
+- Offset (2 bytes) which is where segment data starts
+- Size (2 bytes) which is the size of segment data
 
 ```sh
 [0x00-0x03] 4d 41 53 4d                     // "MASM" Magic bytes
@@ -137,13 +129,13 @@ segment header contains:
 Interesting observations:
 1. Headers are tightly packed after magic bytes
 2. Data segments start immediately after headers
-3. We can see strings starting at 0x178 which matches Data segment offset
+3. We can see strings starting at 0x178 which matches the Data segment offset
 4. Each segment has its specific size which gets mapped into VM memory later
 ```
 
-### vm state
+### VM state
 
-how vm state is stored through the previously seen 2nd function: ( I late had moments where it felt like few things could be wrong but I did not have a look since it did not matter.):
+How VM state is stored through the previously seen second function: (I later had moments where it felt like a few things could be wrong, but I did not check since it did not matter.)
 
 ```sh
 Final VM State Structure (0x88 bytes):
@@ -154,7 +146,7 @@ Offset  Size    Content
 0x18    8       Extra segment pointer
 0x20    8       Extra segment size
 0x28    8       Flag getter function pointer
-0x30    3       Unknown/padding
+0x30    3       Unknown or padding
 0x33    4       Program Counter (PC)
 0x37    4       Stack Pointer (SP)
 0x3B    77      Other VM state (flags, registers, etc.)
@@ -162,32 +154,33 @@ Offset  Size    Content
 
 ## Analyzing and Debugging VMs
 
-### binary ninja 
-:D While prompting to analyze the VM, I ended up finishing my copilot tokens limit but I did receive a brief information about what most of the instructions execute but then a lot of the instructions were missing.
+### Binary Ninja 
 
-I ended up firing binary ninja and started debugging by setting breakpoints at stackVM and regVM:
+While prompting to analyze the VM, I ended up finishing my Copilot tokens limit, but I did receive brief information about what most of the instructions execute, though many instructions were missing.
+
+I then used Binary Ninja and started debugging by setting breakpoints at stackVM and regVM:
 
 ![alt text](/assets/img/ctf/googlectf25/multiarch1-4.png)
 
-well, :D we need to have an idea about which instructions (opcodes) are executed.
+We need to have an idea about which instructions (opcodes) are executed.
 
 ![alt text](/assets/img/ctf/googlectf25/multiarch1-5.png)
 
-Firing up debugger:
+Starting the debugger:
 
 ![alt text](/assets/img/ctf/googlectf25/multiarch1-6.png)
 
-This will help us know the flow and can be used to gain more information understand the binary better.
+This helps us understand the flow and can be used to gain more information to understand the binary better.
 
 ### Recreating the VM
 
 ![alt text](/assets/img/ctf/googlectf25/multiarch1-7.png)
 
-:O I saved a `.c` export from ghidra and started cleaning it up, fixing types (undefined to another, etc) and then starting that program as it would make it very easy to debug and understand what is happening at each stage. 
+I saved a `.c` export from Ghidra and started cleaning it up, fixing types (undefined to another, etc.), and then started that program as it would make it very easy to debug and understand what is happening at each stage. 
 
-I also had to make certain changes to the code as it did not run expectedly like not executing system calls on `0x1` (probably due to incorrect changes in types)
+I also had to make certain changes to the code as it did not run as expected, such as not executing system calls on `0x1` (probably due to incorrect changes in types).
 
-Debugging line by line, and understanding the working of each instruction. I finally had a working program that was enough to solve the challenge.
+Debugging line by line and understanding the working of each instruction, I finally had a working program that was enough to solve the challenge.
 
 [Program Source Code | Github Gists ](https://gist.github.com/Utkar5hM/c3402f6e87453274736ff341d9baf96c)
 
@@ -199,11 +192,11 @@ gcc -o main main.c ;clear; ./main crackme.masm
 
 ![alt text](/assets/img/ctf/googlectf25/multiarch1-8.png)
 
-
 ## Solving the challenges
 
-### challenge 1: What's your favorite number?
-upon entering an arbitrary number `568` (`0x238`):
+### Challenge 1: What's your favorite number?
+
+Upon entering an arbitrary number `568` (`0x238`):
 
 ```
 [LOG] execute_stackvm called, pc=0x102d
@@ -219,8 +212,7 @@ upon entering an arbitrary number `568` (`0x238`):
 [LOG] pc incremented by 5
 ...
 ...
-...
-rogram Counter (PC): 0x1046
+Program Counter (PC): 0x1046
 [LOG] execute_stackvm called, pc=0x1046
 [DEBUG] Instruction read: 60 00 00 00 00
 [LOG] S.ADD instruction
@@ -229,7 +221,6 @@ rogram Counter (PC): 0x1046
 [DEBUG] Wrote 4 bytes to address 0x8efc
 [DEBUG] Data written: 68 58 50 1b 
 [DEBUG] Pushed to stack: 0x1b505868
-...
 ...
 ...
 Program Counter (PC): 0x1050
@@ -241,28 +232,27 @@ Program Counter (PC): 0x1050
 [DEBUG] Comparing: 0xaaaaaaaa and 0x1b505868
 [DEBUG] Comparison flags set: Zero=0, Negative=1
 [LOG] pc incremented by 5
-
 ```
 
-Looking at the logs we can figure out that the following operation takes place:
+Looking at the logs, we can figure out that the following operation takes place:
 
 ```c
-x = input +0x1b505630;
+x = input + 0x1b505630;
 if (x == 0xaaaaaaaa) jump();
 ```
 
-computing such an x:
+Computing such an x:
 
 ```c
 #include <stdio.h>
 
 int main(){
-	printf("%u", 0xaaaaaaaa - ((unsigned long)0x1b505630));
-	return 0;
+    printf("%u", 0xaaaaaaaa - ((unsigned long)0x1b505630));
+    return 0;
 }
 ```
 
-we get `2405061754`.
+We get `2405061754`.
 
 ```
 ./multiarch crackme.masm 
@@ -273,12 +263,11 @@ Challenge 1 - What's your favorite number? 2405061754
 Challenge 2 - Tell me a joke: 
 ```
 
-So it does work.  :D 
+So it works.
 
+### Challenge 2: Tell me a joke
 
-### challenge 2: Tell me a joke:
-
-Let's try entering an Arbitrary input: `ABCDEFGHIJKLMNOPQRST`:
+Let us try entering an arbitrary input: `ABCDEFGHIJKLMNOPQRST`:
 
 ```sh
 Program Counter (PC): 0x107c
@@ -321,7 +310,7 @@ Program Counter (PC): 0x107d
 [DEBUG] XORing: R[1] = R[1] ^ R[3] = 0x3620fece ^ 0x395028e3 = 0xf70d62d
 ..,
 ..
-multiplication and xor happens several times
+Multiplication and xor happens several times
 ...
 ..
 [0;32m[DEBUG] Executing RegVM instruction at PC: 0x8ee000001088[0m
@@ -331,17 +320,17 @@ multiplication and xor happens several times
 Program Counter (PC): 0x108d
 ```
 
-From the entire output (not just what's shown above ), We can note the following operation taking place:
+From the entire output, we can note the following operation takes place:
 ```c
 xor_result=0;
 for (i (0x8ee0); i<=0x8f00; i++){
-	val = 0xcafebabe * (unsigned int)input[i];
-	xor_result= (unsigned int)(val  >> 32) ^ xor_result;
+    val = 0xcafebabe * (unsigned int)input[i];
+    xor_result= (unsigned int)(val  >> 32) ^ xor_result;
 }
 if(xor_result==0x7331) jump();
 ```
 
-We can bruteforce to find such a number:
+We can brute force to find such a number:
 
 ```c
 #include <stdio.h>
@@ -354,7 +343,6 @@ int main() {
     int num_targets = sizeof(targets) / sizeof(targets[0]);
 
     uint32_t multiplier = 0xcafebabe;
-
 
     for (int i = 0; i < num_targets; i++) {
         uint32_t target = targets[i];
@@ -379,7 +367,7 @@ int main() {
             return 1;
         }
 
-		printf("\"\\x%02x\\x%02x\\x%02x\\x%02x\"\n",
+        printf("\"\\x%02x\\x%02x\\x%02x\\x%02x\"\n",
        found_x & 0xff,
        (found_x >> 8) & 0xff,
        (found_x >> 16) & 0xff,
@@ -390,7 +378,7 @@ int main() {
 }
 ```
 
-we get the string `\x46\x91\x00\x00`.
+We get the string `\x46\x91\x00\x00`.
 
 We need to input the code through echo:
 
@@ -402,9 +390,9 @@ Welcome to the multiarch of madness! Let's see how well you understand it.
 Challenge 1 - What's your favorite number? Challenge 2 - Tell me a joke: Challenge 3 - Almost there! But can you predict the future?
 ```
 
-### challenge 2: Almost there! But can you predict the future?
+### Challenge 3: Almost there! But can you predict the future?
 
-Let's re-enter our arbitrary number `568` (`0x238`) again.
+Let us re-enter our arbitrary number `568` (`0x238`) again.
 
 ```sh
 [DEBUG] Executing RegVM instruction at PC: 0x8ee0000010b2
@@ -442,10 +430,10 @@ Let's re-enter our arbitrary number `568` (`0x238`) again.
 [DEBUG] Comparing: 0xc0ffee and 0x36f33e
 ...
 ..
-Random No's are generated and the next steps are reporduced.
+Random numbers are generated and the next steps are reproduced.
 ```
 
-From the above, we can note that, the following operations take place:
+From the above, we can note that the following operations take place:
 
 ```c
 for(int i(0); i<=some_n;i++){
@@ -456,7 +444,7 @@ for(int i(0); i<=some_n;i++){
 }
 ```
 
-though the seeding is done with a standard `srand()` function, the random generation function is defined as below:
+Although the seeding is done with a standard `srand()` function, the random generation function is defined as below:
 
 ```c
 uint64_t vm_syscall_get_random(long * param_1,unsigned int *param_2)
@@ -472,8 +460,7 @@ uint64_t vm_syscall_get_random(long * param_1,unsigned int *param_2)
   return 1;
 }
 ```
-hence, we need to take care of it as well.
-
+Hence, we need to take care of it as well.
 
 So we can brute force it with the following code:
 
@@ -507,7 +494,7 @@ int main() {
 }
 ```
 
-Running the above we get `45483068 (0x2b6043c)`.
+Running the above, we get `45483068 (0x2b6043c)`.
 
 ```sh
 echo -ne "2405061754\n\x46\x91\n45483068" | FLAG=MYFAKEFLAG ../multiarch crackme.masm 
@@ -519,11 +506,11 @@ What number am I thinking of? Congrats! You are the Sorcerer Supreme of the mult
 Here, have a flag: MYFAKEFLAG
 [I] done!
 ```
-Well it works.
+It works.
 
-## Obtaining the flag:
+## Obtaining the flag
 
-Hmm, with a script to solve pow and submitting the solution: :D 
+With a script to solve the proof of work and submitting the solution: :D 
 
 
 ![](/assets/img/ctf/googlectf25/multiarch1-9.png)
