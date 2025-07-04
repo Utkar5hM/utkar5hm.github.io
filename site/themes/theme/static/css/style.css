@@ -1,35 +1,69 @@
 body {
-  background: #18181b;
-  color: #d4d4d4;
-  font-family: 'Inter', Arial, sans-serif;
+  background: #282830;
+  color: #e0e0e0;
+  font-family: 'Fira Mono', 'JetBrains Mono', 'Space Mono', 'Consolas', monospace;
   max-width: 800px;
   margin: auto;
-  padding: 1em;
+  padding: 1.5em;
   line-height: 1.7;
 }
 
-/* header and footer areas */
-.menu { padding: 0; }
-.menu li { display: inline-block; }
-.menu a, .article-meta {
-  text-decoration: none;
+/* One-liner ASCII Art Title */
+.ascii-title {
+  font-family: 'Fira Mono', 'JetBrains Mono', 'Space Mono', 'Consolas', monospace;
+  font-size: 1.1em;
+  color: #bcbcbc;
+  text-align: center;
+  margin: 0 !important;
+  padding: 0 !important;
+  letter-spacing: 0.08em;
+  white-space: pre;
+  font-weight: normal;
+  line-height: 1.1;
+}
+
+/* Menu */
+.menu {
+  font-family: inherit;
+  font-size: 1em;
+  color: #bcbcbc;
   background: none;
-  color: #cba6f7;
-  padding: 5px;
-  border-radius: 5px;
-  border-bottom: none;
-  transition: color 0.2s;
+  border: none;
+  text-align: center;
+  padding: 0.2em 0 0.2em 0;
+  margin-bottom: 1.5em;
+  letter-spacing: 0.01em;
+}
+.menu li {
+  display: inline;
+  margin: 0;
+  padding: 0;
+}
+.menu li:not(:last-child)::after {
+  content: "|";
+  color: #444;
+  padding: 0 0.4em;
+}
+.menu a, .article-meta {
+  color: #bcbcbc !important;
+  text-decoration: none !important;
+  background: none !important;
+  border: none !important;
+  font-weight: normal;
+  padding: 0 0.1em;
+  border-radius: 0 !important;
 }
 .menu a:hover, .article-meta:hover {
-  color: #89b4fa;
-  background: none;
-  text-decoration: none;
-  border-bottom: none;
+  color: #bcbcbc !important;
+  background: none !important;
+  text-decoration: none !important;
+  border: none !important;
 }
 .menu, .article-meta, footer { text-align: center; }
 .title { font-size: 1.1em; }
 footer a { text-decoration: none; color: #89b4fa; }
 footer a:hover { color: #cba6f7; text-decoration: underline; }
+footer { font-size: 0.75em;}
 hr {
   border-style: dashed;
   color: #333;
@@ -146,4 +180,11 @@ thead, tfoot, tr:nth-child(even) { background: #23272e; }
 
 h3 {
   color: #ffb86c;
+}
+
+/* Remove margin/padding from parent containers of the title */
+header, .header, .site-header, .title-container {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
 }
