@@ -29,7 +29,8 @@ Files: `Dockerfile, crackme.masm, multiarch, nsjail.cfg, runner.py`
 
 -------------------
 
-Analyzing the starting point, `runner.py`, we can see that a program called multiarch is launched with crackme.masm as an argument. 
+## Starting Point
+Analyzing the starting point, `runner.py`, we can see that a program called `multiarch` is launched with `crackme.masm` as an argument. 
 
 ```sh
 python runner.py 
@@ -48,7 +49,7 @@ Welcome to the multiarch of madness! Let's see how well you understand it.
 Challenge 1 - What's your favorite number? 
 ```
 
-Analyzing crackme.masm:
+## Analyzing `crackme.masm`
 
 ```sh
  user  ~/csec/googlectf/rev-multiarch-1  strings crackme.masm 
@@ -85,7 +86,8 @@ After configuring ghidraMCP with cline (sonent 3.5 free with GitHub edu), I was 
 
 ![alt text](/assets/img/ctf/googlectf25/multiarch1-3.png)
 
-### crackme.masm structure
+
+## crackme.masm structure
 
 After a few more prompts, we had a rough sketch of how the `crackme.masm` is structured.
 
@@ -133,7 +135,7 @@ Interesting observations:
 4. Each segment has its specific size which gets mapped into VM memory later
 ```
 
-### VM state
+## VM state
 
 How VM state is stored through the previously seen second function: (I later had moments where it felt like a few things could be wrong, but I did not check since it did not matter.)
 
@@ -152,7 +154,7 @@ Offset  Size    Content
 0x3B    77      Other VM state (flags, registers, etc.)
 ```
 
-## Analyzing and Debugging VMs
+## Analyzing VMs
 
 ### Binary Ninja 
 
@@ -172,7 +174,7 @@ Starting the debugger:
 
 This helps us understand the flow and can be used to gain more information to understand the binary better.
 
-### Recreating the VM
+## Recreating the VM
 
 ![alt text](/assets/img/ctf/googlectf25/multiarch1-7.png)
 
