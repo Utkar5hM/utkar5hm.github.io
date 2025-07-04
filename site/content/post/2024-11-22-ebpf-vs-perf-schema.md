@@ -1,5 +1,5 @@
 ---
-title: Performance Schema vs eBPF-based Query Profiling
+title: Performance Schema vs eBPF based Query Profiling
 slug: ebpf-vs-perf-schema
 author: Utkarsh M
 date: '2024-11-22'
@@ -19,7 +19,7 @@ tags:
 
 ---
 
-So, it all started at IRIS NITK, where I had the chance to work with some seriously cracked individuals, and we were testing out different distributed strategies for MariaDB. While I didn’t have a ton of time to dive super deep, I was picking up some gems here and there. The real kicker? A bunch of the guys were working on eBPF-based tools for their own projects/academics, and that’s where I first got exposed to eBPF. Safe to say, the tech rizz was strong.
+So, it all started at IRIS NITK, where I had the chance to work with some seriously cracked individuals, and we were testing out different distributed strategies for MariaDB. While I didn’t have a ton of time to dive super deep, I was picking up some gems here and there. The real kicker? A bunch of the guys were working on eBPF based tools for their own projects/academics, and that’s where I first got exposed to eBPF. Safe to say, the tech rizz was strong.
 
 Once my summer internship wrapped up and I had some breathing room, I decided to channel that extra time into learning eBPF by building my own monitoring tool. I finished building it but didn’t get around to testing or using it for quite some time.
 
