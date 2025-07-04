@@ -1,5 +1,5 @@
 body {
-  background: #282830;
+  background: #181818;
   color: #e0e0e0;
   font-family: 'Fira Mono', 'JetBrains Mono', 'Space Mono', 'Consolas', monospace;
   max-width: 800px;
@@ -10,28 +10,38 @@ body {
 
 /* One-liner ASCII Art Title */
 .ascii-title {
-  font-family: 'Fira Mono', 'JetBrains Mono', 'Space Mono', 'Consolas', monospace;
-  font-size: 1.1em;
-  color: #bcbcbc;
+  font-family: inherit;
+  font-size: 1.05em;
+  color: #fff;
   text-align: center;
-  margin: 0 !important;
-  padding: 0 !important;
-  letter-spacing: 0.08em;
+  margin: 0;
+  padding: 0;
   white-space: pre;
-  font-weight: normal;
+  font-weight: bold;
   line-height: 1.1;
+}
+
+/* ASCII separator */
+.ascii-sep {
+  font-family: inherit;
+  color: #aaa;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  font-size: 1em;
+  letter-spacing: 0.08em;
 }
 
 /* Menu */
 .menu {
   font-family: inherit;
   font-size: 1em;
-  color: #bcbcbc;
+  color: #fff;
   background: none;
   border: none;
   text-align: center;
-  padding: 0.2em 0 0.2em 0;
-  margin-bottom: 1.5em;
+  padding: 0;
+  margin: 0.2em 0 0.2em 0;
   letter-spacing: 0.01em;
 }
 .menu li {
@@ -41,29 +51,44 @@ body {
 }
 .menu li:not(:last-child)::after {
   content: "|";
-  color: #444;
+  color: #aaa;
   padding: 0 0.4em;
 }
 .menu a, .article-meta {
-  color: #bcbcbc !important;
+  color: #fff !important;
   text-decoration: none !important;
   background: none !important;
   border: none !important;
   font-weight: normal;
   padding: 0 0.1em;
-  border-radius: 0 !important;
 }
 .menu a:hover, .article-meta:hover {
-  color: #bcbcbc !important;
+  color: #fff !important;
   background: none !important;
   text-decoration: none !important;
   border: none !important;
 }
-.menu, .article-meta, footer { text-align: center; }
+
+/* Footer */
+footer {
+  font-family: inherit;
+  color: #aaa;
+  text-align: center;
+  font-size: 0.9em;
+  border: none;
+  margin-top: 2em;
+  padding-top: 0.5em;
+}
+footer a {
+  color: #aaa !important;
+  text-decoration: none !important;
+}
+footer a:hover {
+  color: #fff !important;
+  text-decoration: none !important;
+}
+
 .title { font-size: 1.1em; }
-footer a { text-decoration: none; color: #89b4fa; }
-footer a:hover { color: #cba6f7; text-decoration: underline; }
-footer { font-size: 0.75em;}
 hr {
   border-style: dashed;
   color: #333;
