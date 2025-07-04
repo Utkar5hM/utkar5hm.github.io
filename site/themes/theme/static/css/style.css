@@ -204,7 +204,7 @@ thead, tfoot, tr:nth-child(even) { background: #232323; }
 .post-container {
   margin: 2.5em 0 2em 0;
   padding-bottom: 1.5em;
-  border-bottom: 1px solid #333;
+  border-bottom: 3px double #444;
 }
 
 .post-date {
@@ -310,4 +310,19 @@ h1, h2, h3, h4, h5, h6 {
 .post-list a:hover {
   color: #fff;
   border-bottom: none;
+}
+
+
+.post-title, .pagetitle, .list-title, h1 {
+  font-family: Consolas, 'Liberation Mono', 'Courier New', monospace;
+  color: #ccc;
+  font-size: 1.5em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin: 0.7em 0 0.7em 0;
+  text-align: left;
+  border: none;
+  background: none;
+  text-shadow: none;
+  line-height: 1.1;
 }
