@@ -259,3 +259,55 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Keep your .ascii-title and .site-title-main as they are! */
+
+/* ASCII/NFO style for post list */
+.post-list, .post-list * {
+  font-family: Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 1em;      /* Smaller font for compactness */
+  color: #ccc;
+  line-height: 1.25;
+}
+
+.post-list {
+  margin: 1.5em 0 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.post-list li {
+  display: flex;
+  align-items: baseline;
+  padding: 0.05em 0;
+  border: none;
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+.post-list .post-date {
+  color: #888;
+  min-width: 7.2em;
+  display: inline-block;
+  text-align: right;
+  margin-right: 0.75em;
+  font-size: 0.93em;
+}
+
+.post-list .post-sep {
+  color: #555;
+  margin-right: 0.5em;
+}
+
+.post-list a {
+  color: #ccc;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.93em;
+  border-bottom: none;
+  transition: none;
+  word-break: break-all; /* Prevents overflow, allows long titles to wrap */
+}
+
+.post-list a:hover {
+  color: #fff;
+  border-bottom: none;
+}
