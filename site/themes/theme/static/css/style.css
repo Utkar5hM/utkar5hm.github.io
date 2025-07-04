@@ -1,7 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@700&display=swap');
+
 body {
   background: #181818;
   color: #e0e0e0;
-  font-family: 'Fira Mono', 'JetBrains Mono', 'Space Mono', 'Consolas', monospace;
+  font-family: Consolas, 'Liberation Mono', 'Courier New', monospace;
   max-width: 800px;
   margin: auto;
   padding: 1.5em;
@@ -11,20 +13,21 @@ body {
 /* One-liner ASCII Art Title */
 .ascii-title {
   font-family: inherit;
-  font-size: 1.05em;
+  font-size: 1.15em;
   color: #fff;
   text-align: center;
   margin: 0;
   padding: 0;
   white-space: pre;
-  font-weight: bold;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   line-height: 1.1;
 }
 
 /* ASCII separator */
 .ascii-sep {
   font-family: inherit;
-  color: #aaa;
+  color: #888;
   text-align: center;
   margin: 0;
   padding: 0;
@@ -36,7 +39,7 @@ body {
 .menu {
   font-family: inherit;
   font-size: 1em;
-  color: #fff;
+  color: #e0e0e0;
   background: none;
   border: none;
   text-align: center;
@@ -51,11 +54,11 @@ body {
 }
 .menu li:not(:last-child)::after {
   content: "|";
-  color: #aaa;
+  color: #888;
   padding: 0 0.4em;
 }
 .menu a, .article-meta {
-  color: #fff !important;
+  color: #e0e0e0 !important;
   text-decoration: none !important;
   background: none !important;
   border: none !important;
@@ -72,7 +75,7 @@ body {
 /* Footer */
 footer {
   font-family: inherit;
-  color: #aaa;
+  color: #888;
   text-align: center;
   font-size: 0.9em;
   border: none;
@@ -95,39 +98,56 @@ hr {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  color: #cba6f7;
+  color: #fff;
   font-weight: 700;
   margin-top: 1.1em;
   margin-bottom: 0.3em;
   letter-spacing: 0.01em;
 }
-a { color: #89b4fa; transition: border-bottom 0.2s; text-decoration: none; border-bottom: 1.5px dotted #89b4fa; }
-a:hover { color: #cba6f7; border-bottom: 2px solid #cba6f7; text-decoration: none; }
+a, a:visited, a:active {
+  color: #fafafa;
+  border-bottom: 1px dashed #aaa;
+  text-decoration: none;
+  font-weight: 600;
+}
+a:hover {
+  color: #fff;
+  border-bottom: 1px solid #fff;
+  text-decoration: none;
+}
 
 /* code */
 pre {
-  background: #23272e;
-  border: 1px solid #313244;
+  background: #232323;
+  border: 1px solid #444;
   box-shadow: none;
   padding: 1.1em;
   overflow-x: auto;
-  border-radius: 8px;
+  border-radius: 0;
   color: #fff;
   font-size: 1em;
-  font-family: 'Space Mono', 'JetBrains Mono', 'Fira Mono', 'IBM Plex Mono', 'Fira Code', 'Source Code Pro', Consolas, 'Lucida Console', Monaco, monospace;
+  font-family: inherit;
 }
 code {
-  background: #222b3a;
-  color: #7dd87d;
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-family: 'Space Mono', 'JetBrains Mono', 'Fira Mono', 'IBM Plex Mono', 'Fira Code', 'Source Code Pro', Consolas, 'Lucida Console', Monaco, monospace;
+  background: #232323;
+  color: #fafafa;
+  border: none;
+  border-radius: 2px;
+  padding: 1px 5px;
+  font-size: 0.98em;
+  font-family: Consolas, 'Liberation Mono', 'Courier New', monospace;
 }
-pre code { background: none; color: #fff; }
+pre code {
+  background: none;
+  color: inherit;
+  border: none;
+  padding: 0;
+  font-size: 1em;
+}
 
 /* Prompt line for command examples */
 .prompt {
-  color: #a6e3a1;
+  color: #7ecbff;
   font-weight: bold;
 }
 
@@ -135,10 +155,10 @@ pre code { background: none; color: #fff; }
 img, iframe, video { max-width: 100%; }
 main { hyphens: auto; }
 blockquote {
-  background: #313244;
-  border-left: 5px solid #cba6f7;
+  background: #232323;
+  border-left: 3px solid #888;
   padding: 3px 1em 3px;
-  color: #d4d4d4;
+  color: #e0e0e0;
   margin: 1.2em 0;
   font-style: italic;
 }
@@ -149,30 +169,32 @@ table {
   overflow-x: auto;
   min-width: 600px;
   margin: auto;
-  border-top: 1px solid #313244;
-  border-bottom: 1px solid #313244;
-  color: #d4d4d4;
+  border-top: 1px solid #444;
+  border-bottom: 1px solid #444;
+  color: #e0e0e0;
+  background: #181818;
 }
-table thead th { border-bottom: 1px solid #313244; }
+table thead th { border-bottom: 1px solid #444; }
 th, td { padding: 5px; }
-thead, tfoot, tr:nth-child(even) { background: #23272e; }
+thead, tfoot, tr:nth-child(even) { background: #232323; }
 
 .site-title-main {
-  font-size: 1.6em;
+  font-size: 1.15em;
   font-weight: 700;
   color: #fff;
   text-align: center;
   margin-top: 0em;
   margin-bottom: 0em;
   letter-spacing: 0.04em;
-  text-shadow: 0 2px 8px #181818;
+  text-shadow: none;
   padding-bottom: 0;
   padding-top: 0;
   border-bottom: none;
+  font-family: inherit;
 }
 
 .article-meta {
-  color: #a1a1aa;
+  color: #888;
   background: none;
   font-size: 0.95em;
   margin-bottom: 0.5em;
@@ -185,7 +207,7 @@ thead, tfoot, tr:nth-child(even) { background: #23272e; }
 }
 
 .post-date {
-  color: #bbb;
+  color: #aaa;
   font-size: 1em;
   letter-spacing: 0.05em;
   margin-bottom: 0.2em;
@@ -204,7 +226,7 @@ thead, tfoot, tr:nth-child(even) { background: #23272e; }
 }
 
 h3 {
-  color: #ffb86c;
+  color: #cccccc;
 }
 
 /* Remove margin/padding from parent containers of the title */
@@ -213,3 +235,26 @@ header, .header, .site-header, .title-container {
   padding: 0 !important;
   border: none !important;
 }
+
+body,
+.ascii-sep,
+.menu,
+.menu li,
+.menu a,
+.article-meta,
+footer,
+.title,
+hr,
+pre,
+code,
+blockquote,
+table,
+th,
+td,
+.post-container,
+.post-date,
+h1, h2, h3, h4, h5, h6 {
+  font-family: Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
+/* Keep your .ascii-title and .site-title-main as they are! */
