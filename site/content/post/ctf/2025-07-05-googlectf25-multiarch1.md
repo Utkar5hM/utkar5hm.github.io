@@ -1,5 +1,5 @@
 ---
-title: Google CTF 2025 Writeup | RE - multiarch 1 
+title: Google CTF 2025 Writeup | RE - multiarch-1
 slug: googlectf25-multiarch1
 author: Utkarsh M
 date: '2025-07-04'
