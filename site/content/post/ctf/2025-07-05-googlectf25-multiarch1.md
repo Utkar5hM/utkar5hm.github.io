@@ -53,7 +53,7 @@ Challenge 1 - What's your favorite number?
 ## Analyzing `crackme.masm`
 
 ```sh
- user Ã®â€šÂ± ~/csec/googlectf/rev-multiarch-1 Ã®â€šÂ± strings crackme.masm 
+strings crackme.masm 
 MASM
 0	Sg
 Welcome to the multiarch of madness! Let's see how well you understand it.
