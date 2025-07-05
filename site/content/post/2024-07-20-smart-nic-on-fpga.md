@@ -672,16 +672,16 @@ Resources used or referenced:
 
 0. [Inbasekaran Perumal](https://www.linkedin.com/in/ACoAADMaz7wBukhl_Dsrd93MskvZwKDe93P5V6Q)
 1. NITK's CSE Dept Open Source Networking Technology Course Notes
-2. https://digilent.com/reference/learn/programmable-logic/tutorials/nexys-4-ddr-getting-started-with-microblaze-servers/start?redirect=1
-3. https://forum.digilent.com/topic/4753-multiple-uartlite-instantiation-w-microblaze/
-4. https://github.com/NetFPGA/NetFPGA-SUME-public/wiki/NetFPGA-SUME-TCAM-IPs
-5. https://xilinx.github.io/embeddedsw.github.io/emaclite/doc/html/api/example.html
-6. https://xilinx.github.io/embeddedsw.github.io/emaclite/doc/html/api/index.html
-7. https://github.com/rprinz08/hBPF
-8. https://people.ece.cornell.edu/land/courses/ece5760/FinalProjects/f2011/mis47_ayg6/mis47_ayg6/index.html
-9. https://gist.github.com/austinmarton/2862515
-10. https://support.xilinx.com/s/question/0D54U00005WcW1LSAV/etherner-raw-data-sniffing?language=en_US
-11. https://support.xilinx.com/s/question/0D52E00006hpiOxSAI/anyone-tried-using-lwip-to-send-raw-ethernet-frames-with-custom-ethertype?language=en_US
-12. https://www.youtube.com/watch?v=pkDWzG8spvg&t=1145s
-13. https://docs.amd.com/r/2.2-English/pg318-tcam/Introduction
-14. https://github.com/dchammond/eth_debug
+2. [Nexys 4 DDR - Getting Started with Microblaze Servers](https://digilent.com/reference/learn/programmable-logic/tutorials/nexys-4-ddr-getting-started-with-microblaze-servers/start?redirect=1)
+3. [Multiple UARTLite Instantiation w/ Microblaze](https://forum.digilent.com/topic/4753-multiple-uartlite-instantiation-w-microblaze/)
+4. [NetFPGA-SUME-TCAM-IPs](https://github.com/NetFPGA/NetFPGA-SUME-public/wiki/NetFPGA-SUME-TCAM-IPs)
+5. [Xilinx Emaclite Example](https://xilinx.github.io/embeddedsw.github.io/emaclite/doc/html/api/example.html)
+6. [Xilinx Emaclite API Index](https://xilinx.github.io/embeddedsw.github.io/emaclite/doc/html/api/index.html)
+7. [hBPF](https://github.com/rprinz08/hBPF)
+8. [Cornell ECE5760 Final Project](https://people.ece.cornell.edu/land/courses/ece5760/FinalProjects/f2011/mis47_ayg6/mis47_ayg6/index.html)
+9. [Austin Marton Gist](https://gist.github.com/austinmarton/2862515)
+10. [Ethernet Raw Data Sniffing (Xilinx)](https://support.xilinx.com/s/question/0D54U00005WcW1LSAV/etherner-raw-data-sniffing?language=en_US)
+11. [Using lwIP to Send Raw Ethernet Frames (Xilinx)](https://support.xilinx.com/s/question/0D52E00006hpiOxSAI/anyone-tried-using-lwip-to-send-raw-ethernet-frames-with-custom-ethertype?language=en_US)
+12. [YouTube: UARTLite 2:1 Concat Block](https://www.youtube.com/watch?v=pkDWzG8spvg&t=1145s)
+13. [AMD PG318 TCAM Introduction](https://docs.amd.com/r/2.2-English/pg318-tcam/Introduction)
+14. [eth_debug](https://github.com/dchammond/eth_debug)
