@@ -3,6 +3,7 @@ title: Reducing cpu Usage in Windows | Guide
 slug: reducing-cpu-usage
 author: Utkarsh M
 date: '2021-03-01'
+description: "Tips and tweaks to reduce CPU usage and improve Windows performance for gaming and daily use."
 categories:
   - Guide
 tags:

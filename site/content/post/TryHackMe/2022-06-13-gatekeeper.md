@@ -3,6 +3,7 @@ title: Gatekeeper Write-up | TryHackMe
 slug: gatekeeper
 author: Utkarsh M
 date: '2022-06-13'
+description: "TryHackMe Gatekeeper walkthrough and solution."
 categories:
   - TryHackMe
 tags:

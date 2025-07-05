@@ -3,6 +3,7 @@ title: Google CTF 2025 Writeup | RE - multiarch-1
 slug: googlectf25-multiarch1
 author: Utkarsh M
 date: '2025-07-04'
+description: "Writeup and solution for the Google CTF 2025 Multiarch-1 reverse engineering challenge."
 categories:
   - CTFs
 tags:
@@ -52,7 +53,7 @@ Challenge 1 - What's your favorite number?
 ## Analyzing `crackme.masm`
 
 ```sh
- user  ~/csec/googlectf/rev-multiarch-1  strings crackme.masm 
+ user Ã®â€šÂ± ~/csec/googlectf/rev-multiarch-1 Ã®â€šÂ± strings crackme.masm 
 MASM
 0	Sg
 Welcome to the multiarch of madness! Let's see how well you understand it.

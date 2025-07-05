@@ -3,6 +3,7 @@ title: Looking Glass Write-up | TryHackMe
 slug: lookingglass
 author: Utkarsh M
 date: '2022-07-11'
+description: "TryHackMe Looking Glass walkthrough and solution."
 categories:
   - TryHackMe
 tags:

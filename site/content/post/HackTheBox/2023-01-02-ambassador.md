@@ -3,6 +3,7 @@ title: Ambassador Writeup | HackTheBox Medium
 slug: ambassador
 author: Utkarsh M
 date: '2023-01-02'
+description: "HackTheBox Ambassador walkthrough and solution."
 categories:
   - HackTheBox
 tags:

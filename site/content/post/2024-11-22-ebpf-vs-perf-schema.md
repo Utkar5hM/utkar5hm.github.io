@@ -3,6 +3,7 @@ title: Performance Schema vs eBPF based Query Profiling
 slug: ebpf-vs-perf-schema
 author: Utkarsh M
 date: '2024-11-22'
+description: "A comparison of eBPF and MySQL Performance Schema for performance monitoring and tracing."
 categories:
   - Development
 tags:

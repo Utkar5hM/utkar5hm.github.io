@@ -3,6 +3,7 @@ title: Brainstorm Write-up | TryHackMe
 slug: brainstorm
 author: Utkarsh M
 date: '2022-06-12'
+description: "TryHackMe Brainstorm walkthrough and solution."
 categories:
   - TryHackMe
 tags:

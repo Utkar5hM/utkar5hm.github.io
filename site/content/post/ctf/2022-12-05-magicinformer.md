@@ -3,6 +3,7 @@ title: The Magic Informer Writeup | HackTheBox University CTF 2022
 slug: magicinformer
 author: Utkarsh M
 date: '2022-12-05'
+description: "Writeup and solution for the Magic Informer CTF challenge."
 categories:
   - CTFs
   - HackTheBox

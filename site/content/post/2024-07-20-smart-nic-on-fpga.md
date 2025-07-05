@@ -3,6 +3,7 @@ title:  Building a Smart Network Interface Card on FPGA – Major Project Editio
 slug: smart-nic-on-fpga
 author: Utkarsh M
 date: '2024-07-20'
+description: "How we built a smart NIC on FPGA for our major project, including hardware offloading, Verilog, Linux drivers, and lessons learned."
 categories:
   - Development
 tags:
