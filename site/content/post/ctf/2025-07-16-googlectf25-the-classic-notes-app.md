@@ -51,7 +51,61 @@ Note at 2: ABC�
 Give me your command:
 ```
 
-## Solving the challenges
+## Solving the challenge
+
+Updated Dockerfile to debug with gdb (gdb-multiarch):
+
+```Dockerfile
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+FROM ubuntu:24.04 as chroot
+
+# ubuntu24 includes the ubuntu user by default
+RUN /usr/sbin/userdel -r ubuntu && /usr/sbin/useradd --no-create-home -u 1000 user
+
+RUN apt update && apt install -y python3-full binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu
+
+COPY qemu-aarch64 /home/user/qemu-aarch64
+COPY ctf.c /home/user/ctf.c
+COPY flag.txt /home/user/flag.txt
+RUN aarch64-linux-gnu-gcc /home/user/ctf.c -o /home/user/ctf -march=armv8.5-a+memtag -fPIE -pie
+
+RUN cp /usr/bin/env /home/user/env
+
+FROM gcr.io/kctf-docker/challenge@sha256:9f15314c26bd681a043557c9f136e7823414e9e662c08dde54d14a6bfd0b619f
+
+COPY --from=chroot / /chroot
+
+# COPY nsjail.cfg /home/user/
+RUN apt install -y socat
+CMD socat \
+      TCP-LISTEN:1337,reuseaddr,fork \
+      EXEC:"/chroot/home/user/env GLIBC_TUNABLES='glibc.mem.tagging=1' /chroot/home/user/qemu-aarch64 -L /chroot/usr/aarch64-linux-gnu/ -g 7878 /chroot/home/user/ctf"
+# 
+```
+
+commands
+```sh
+docker build -t gdb-build  .
+docker run --name cn-gctf-2 -p 1337:1337 -p 7878:7878 --rm   --cap-add=SYS_ADMIN   --cap-add=SYS_PTRACE   --security-opt seccomp=unconfined   --security-opt apparmor=unconfined   --privileged   gdb-build 
+
+# Inside gdb
+file ./ctf # copied from :D docker container
+set architecture aarch64
+target remote localhost:7878
+```
+
 
 The following image illustrates the solution process for the challenge in detail.
 
