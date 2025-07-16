@@ -185,7 +185,7 @@ I also had to make certain changes to the code as it did not run as expected, su
 
 Debugging line by line and understanding the working of each instruction, I finally had a working program that was enough to solve the challenge.
 
-[Program Source Code | Github Gists ](https://gist.github.com/Utkar5hM/c3402f6e87453274736ff341d9baf96c)
+[Program Source Code | Github Gist ](https://gist.github.com/Utkar5hM/c3402f6e87453274736ff341d9baf96c)
 
 This can be compiled and run with:
 
