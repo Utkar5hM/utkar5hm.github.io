@@ -95,8 +95,10 @@ CMD socat \
 # 
 ```
 
-commands
+commands to debug:
+
 ```sh
+# starting the container 
 docker build -t gdb-build  .
 docker run --name cn-gctf-2 -p 1337:1337 -p 7878:7878 --rm   --cap-add=SYS_ADMIN   --cap-add=SYS_PTRACE   --security-opt seccomp=unconfined   --security-opt apparmor=unconfined   --privileged   gdb-build 
 
