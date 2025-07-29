@@ -12,8 +12,8 @@ body {
 
 /* One-liner ASCII Art Title */
 .ascii-title {
-  font-family: inherit;
-  font-size: 1.15em;
+  font-family: Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.8em;
   color: #fff;
   text-align: center;
   margin: 0;
