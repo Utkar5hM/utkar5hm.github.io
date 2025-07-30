@@ -125,7 +125,7 @@ pre {
   overflow-x: auto;
   border-radius: 0;
   color: #fff;
-  font-size: 1em;
+  font-size: 0.8em;
   font-family: inherit;
 }
 code {
@@ -134,7 +134,7 @@ code {
   border: none;
   border-radius: 2px;
   padding: 1px 5px;
-  font-size: 0.98em;
+  font-size: 0.8em;
   font-family: Consolas, 'Liberation Mono', 'Courier New', monospace;
 }
 pre code {
@@ -161,6 +161,7 @@ blockquote {
   color: #e0e0e0;
   margin: 1.2em 0;
   font-style: italic;
+  font-size: 0.95em;
 }
 
 table {
