@@ -30,7 +30,7 @@ params:
 
 markup:
   highlight:
-    codeFences: false
+    codeFences: true
   goldmark:
     renderer:
       unsafe: true

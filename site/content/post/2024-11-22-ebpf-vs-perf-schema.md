@@ -28,7 +28,7 @@ So, I finally decided revisiting it to see if it’s actually any good.
 
 [Project Github Link](https://github.com/Utkar5hM/mariadb-ebpf-exporter)
 
-Before starting the comparison, let’s first see what the program does and how it works. The MariaDB/MySQL eBPF exporter collects query latencies—just as the name suggests—by hooking into the initial query execution function named `dispatch_command()` (in both MySQL/MariaDB, though they behave a bit differently) and then normalizes the queries to help categorize similar ones together. It then exports this data as Prometheus metrics, which can be collected by a Prometheus server and visualized in Grafana.
+Before starting the comparison, let’s first see what the program does and how it works. The MariaDB/MySQL eBPF exporter collects query latencies just as the name suggests by hooking into the initial query execution function named `dispatch_command()` (in both MySQL/MariaDB, though they behave a bit differently) and then normalizes the queries to help categorize similar ones together. It then exports this data as Prometheus metrics, which can be collected by a Prometheus server and visualized in Grafana.
 
 I used libbpfgo for building the program, mainly for its CORE (Compile Once, Run Everywhere) capability, and also because I wanted to use Golang for the userspace part of the program. There was a challenge though: the compiled MariaDB/MySQL binaries have mangled function names, and libbpfgo can’t easily find and hook into those like bpftrace can (at least, I didn’t know a way). To handle this, I wrote a build script that uses the `nm` tool to extract the actual function name from the DB binary, stores it, and compiles the BPF object to hook into it. This object is then embedded into the Go program using Go’s `embed` package, ensuring it always runs with the DB version it was built for.
 
@@ -40,7 +40,7 @@ Some points to consider before testing:
 - Query fingerprinting/normalization uses regex, which is CPU intensive and might impact performance. One idea to reduce this overhead could be to transfer data to another system for normalization/export.
 - The program might still have room for optimization.
 
-It also seemed interesting to test how the tool behaves when collecting only slower queries—say, queries longer than 200ms or 1000ms. This makes sense, but the Percona blog explains why it’s usually not the best idea and suggests a better approach worth trying out later.
+It also seemed interesting to test how the tool behaves when collecting only slower queries say, queries longer than 200ms or 1000ms. This makes sense, but the Percona blog explains why it’s usually not the best idea and suggests a better approach worth trying out later.
 
 ## Benchmarking Configuration
 
@@ -93,7 +93,7 @@ I started by having the eBPF exporter capture all queries, even 0ms latency ones
 
 ![htop-ss](/assets/img/other/ebpf-perf/htop.jpeg)
 
-This changed significantly when filtering to only collect queries over 200ms—CPU and memory usage dropped, and the benchmarks reflected that.
+This changed significantly when filtering to only collect queries over 200ms CPU and memory usage dropped, and the benchmarks reflected that.
 
 ### Results
 
