@@ -16,7 +16,8 @@ tags:
   - pwn
   - re
   - vm
-image: /assets/img/ctf/googlectf25/the-classic-notes-app.png
+images: 
+  - /assets/img/ctf/googlectf25/the-classic-notes-app.png
 ---
 
 ### Challenge Details
