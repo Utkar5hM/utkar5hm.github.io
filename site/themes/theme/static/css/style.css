@@ -127,6 +127,11 @@ pre {
   color: #fff;
   font-size: 0.8em;
   font-family: inherit;
+  /* Add mobile-specific fixes */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  word-wrap: break-word;
+  white-space: pre-wrap;
 }
 code {
   background: #232323;
@@ -136,6 +141,9 @@ code {
   padding: 1px 5px;
   font-size: 0.8em;
   font-family: Consolas, 'Liberation Mono', 'Courier New', monospace;
+  /* Add mobile-specific fixes */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 pre code {
   background: none;
@@ -143,6 +151,28 @@ pre code {
   border: none;
   padding: 0;
   font-size: 1em;
+  /* Ensure consistent sizing */
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+}
+
+/* Mobile-specific code block adjustments */
+@media screen and (max-width: 768px) {
+  pre {
+    font-size: 0.75em;
+    padding: 0.8em;
+    margin: 1em -0.5em; /* Extend to edges on small screens */
+  }
+  
+  code {
+    font-size: 0.75em;
+  }
+  
+  pre code {
+    font-size: 1em;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
 }
 
 /* Prompt line for command examples */
