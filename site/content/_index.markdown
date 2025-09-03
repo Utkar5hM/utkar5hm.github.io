@@ -12,4 +12,4 @@ Welcome to my personal site, where I share my blogs and thoughts on technology, 
 
 <!-- To know more about me or connect with me, visit my [LinkedIn profile](https://www.linkedin.com/in/utkar5hm/). -->
 
-Reach Me: @[linkedIn](https://www.linkedin.com/in/utkar5hm/) / @[x](https://x.com/utkar5hm)
+Reach Me: @[linkedIn](https://www.linkedin.com/in/utkar5hm/)
