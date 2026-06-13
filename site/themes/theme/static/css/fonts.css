@@ -1,9 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap');
 
-body {
-  font-family: 'Inter', Arial, sans-serif;
-}
-code {
-  font-family: 'Space Mono', 'JetBrains Mono', 'Fira Mono', 'IBM Plex Mono', 'Fira Code', 'Source Code Pro', Consolas, 'Lucida Console', Monaco, monospace;
-  font-size: 95%;
+:root {
+  --font-serif: 'Newsreader', Georgia, serif;
+  --font-mono: 'JetBrains Mono', 'Fira Mono', 'IBM Plex Mono', Consolas, monospace;
 }

@@ -1,9 +1,55 @@
-  <footer>
-  {{ partial "foot_custom.html" . }}
-  {{ with .Site.Params.footer }}
-  <hr/>
-  {{ replace . "{Year}" now.Year | markdownify }}
-  {{ end }}
-  </footer>
+      <footer class="site-footer">
+        <span>© Utkar5hM 2021–{{ now.Year }}</span>
+        <a href="https://github.com/Utkar5hM">Github</a>
+        <a href="https://www.linkedin.com/in/utkar5hm/">LinkedIn</a>
+      </footer>
+    </div><!-- /.wrap -->
+
+    <div class="theme-bar" id="themeBar">
+      <span class="tl">theme</span>
+      <span class="dots" id="themeDots"></span>
+    </div>
+
+    {{ partial "foot_custom.html" . }}
+    <script>
+    const THEMES = {
+      graphite: { label:"Graphite", swatch:"oklch(0.74 0.10 248)", vars:{
+        "--bg":"oklch(0.19 0.004 260)","--bg-elev":"oklch(0.235 0.005 260)","--text":"oklch(0.92 0.008 260)",
+        "--muted":"oklch(0.66 0.01 260)","--faint":"oklch(0.52 0.01 260)","--rule":"oklch(0.32 0.008 260)",
+        "--rule-soft":"oklch(0.27 0.006 260)","--accent":"oklch(0.74 0.10 248)","--accent-dim":"oklch(0.66 0.085 248)"}},
+      ink: { label:"Ink", swatch:"oklch(0.80 0.085 68)", vars:{
+        "--bg":"oklch(0.175 0.004 270)","--bg-elev":"oklch(0.215 0.005 270)","--text":"oklch(0.92 0.006 270)",
+        "--muted":"oklch(0.65 0.008 270)","--faint":"oklch(0.50 0.008 270)","--rule":"oklch(0.30 0.006 270)",
+        "--rule-soft":"oklch(0.255 0.005 270)","--accent":"oklch(0.80 0.085 68)","--accent-dim":"oklch(0.70 0.075 68)"}},
+      phosphor: { label:"Phosphor", swatch:"oklch(0.80 0.155 152)", vars:{
+        "--bg":"oklch(0.165 0.012 160)","--bg-elev":"oklch(0.205 0.014 162)","--text":"oklch(0.88 0.018 150)",
+        "--muted":"oklch(0.64 0.018 152)","--faint":"oklch(0.50 0.016 152)","--rule":"oklch(0.30 0.018 158)",
+        "--rule-soft":"oklch(0.245 0.015 158)","--accent":"oklch(0.80 0.155 152)","--accent-dim":"oklch(0.66 0.12 152)"}},
+      midnight: { label:"Midnight", swatch:"oklch(0.78 0.10 220)", vars:{
+        "--bg":"oklch(0.175 0.024 255)","--bg-elev":"oklch(0.22 0.028 255)","--text":"oklch(0.91 0.014 250)",
+        "--muted":"oklch(0.66 0.02 250)","--faint":"oklch(0.52 0.02 250)","--rule":"oklch(0.31 0.024 252)",
+        "--rule-soft":"oklch(0.26 0.02 252)","--accent":"oklch(0.78 0.10 220)","--accent-dim":"oklch(0.70 0.09 220)"}},
+      plum: { label:"Plum", swatch:"oklch(0.74 0.09 350)", vars:{
+        "--bg":"oklch(0.185 0.012 320)","--bg-elev":"oklch(0.225 0.014 320)","--text":"oklch(0.91 0.01 320)",
+        "--muted":"oklch(0.65 0.014 320)","--faint":"oklch(0.51 0.014 320)","--rule":"oklch(0.31 0.014 322)",
+        "--rule-soft":"oklch(0.26 0.012 322)","--accent":"oklch(0.74 0.09 350)","--accent-dim":"oklch(0.66 0.08 350)"}},
+    };
+    const THEME_ORDER = ["graphite","ink","midnight","phosphor","plum"];
+    function applyTheme(key){
+      const t = THEMES[key]; if(!t) return;
+      for(const [k,v] of Object.entries(t.vars)) document.documentElement.style.setProperty(k,v);
+      try{ localStorage.setItem('blogTheme', key); }catch(e){}
+      document.querySelectorAll('.sw-btn').forEach(b=>b.classList.toggle('on', b.dataset.key===key));
+    }
+    (function buildThemeBar(){
+      const dots = document.getElementById('themeDots');
+      if(!dots) return;
+      dots.innerHTML = THEME_ORDER.map(k=>
+        `<button class="sw-btn" data-key="${k}" title="${THEMES[k].label}" style="background:${THEMES[k].swatch};color:${THEMES[k].swatch}"></button>`).join('');
+      dots.querySelectorAll('.sw-btn').forEach(b=>b.addEventListener('click',()=>applyTheme(b.dataset.key)));
+      let saved='graphite'; try{ saved=localStorage.getItem('blogTheme')||'graphite'; }catch(e){}
+      applyTheme(THEMES[saved]?saved:'graphite');
+    })();
+    </script>
   </body>
 </html>

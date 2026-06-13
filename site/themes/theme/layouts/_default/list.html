@@ -1,22 +1,21 @@
 {{ partial "header.html" . }}
-
-{{if not .IsHome }}
-<h1>{{ .Title | markdownify }}</h1>
-{{ end }}
-
-{{ .Content }}
-
-{{ if not .IsHome }}
-<ul class="post-list">
-  {{ $pages := .Pages }}
-  {{ range (where $pages "Section" "!=" "") }}
-  <li>
-    <span class="post-date">{{ .Date.Format "2006/01/02" }}</span>
-    <span class="post-sep">::</span>
-    <a href="{{ .RelPermalink }}">{{ .Title | markdownify }}</a>
-  </li>
-  {{ end }}
-</ul>
-{{ end }}
-
+      <main>
+        {{ if .IsHome }}
+        <div class="home-content">{{ .Content }}</div>
+        {{ else }}
+        <h2 class="page-title">Posts</h2>
+        <ul class="posts">
+          {{ range .Pages.ByDate.Reverse }}
+          <li>
+            <span class="p-date">{{ .Date.Format "2006.01.02" }}</span>
+            <span class="p-main">
+              <span class="p-title"><a href="{{ .RelPermalink }}">{{ .Title | markdownify }}</a></span>
+              {{ with .Params.description }}<span class="p-desc">{{ . }}</span>{{ end }}
+              {{ with .Params.categories }}<span class="p-tag">{{ index . 0 }}</span>{{ end }}
+            </span>
+          </li>
+          {{ end }}
+        </ul>
+        {{ end }}
+      </main>
 {{ partial "footer.html" . }}

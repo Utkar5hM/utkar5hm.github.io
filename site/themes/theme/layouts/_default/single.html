@@ -1,13 +1,21 @@
 {{ partial "header.html" . }}
-{{ if ne .File.BaseFileName "portfolio" }}
-<div class="post-container">
-  {{ if (gt .Params.date 0) }}<div class="post-date">{{ .Date.Format "2006/01/02" }}</div>{{ end }}
-  <h1 class="post-title">{{ .Title | markdownify }}</h1>
-</div>
-{{ end }}
-
-<main>
-{{ .Content }}
-</main>
-
+      <main>
+        {{ if eq .File.BaseFileName "portfolio" }}
+        <div class="portfolio">
+          {{ .Content }}
+        </div>
+        {{ else }}
+        <article>
+          <a class="a-back" href="{{ "/post" | relURL }}">← all posts</a>
+          {{ with .Params.categories }}<div class="a-tag">{{ index . 0 }}</div>{{ end }}
+          <h1 class="a-title">{{ .Title | markdownify }}</h1>
+          {{ with .Description }}<p class="a-sub">{{ . }}</p>{{ end }}
+          <div class="a-meta">
+            <span>{{ .Date.Format "2006.01.02" }}</span>
+            <span>{{ .ReadingTime }} min read</span>
+          </div>
+          <div class="a-body">{{ .Content }}</div>
+        </article>
+        {{ end }}
+      </main>
 {{ partial "footer.html" . }}

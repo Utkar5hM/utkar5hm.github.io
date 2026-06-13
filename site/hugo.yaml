@@ -23,6 +23,9 @@ menu:
     - name: Categories
       url: "categories/"
       weight: 3
+    # - name: Portfolio
+    #   url: "portfolio/"
+    #   weight: 4
 
 params:
   description: "Utkarsh M: infosec, CTFs, development, tech and more."

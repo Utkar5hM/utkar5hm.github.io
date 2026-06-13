@@ -1,13 +1,14 @@
 {{ partial "header.html" . }}
-
-<h1>{{ .Title }}</h1>
-
-<ul class="terms">
-  {{ range .Pages }}
-  <li>
-    <a href="{{ .RelPermalink }}">{{ .Title }}</a> ({{ len .Pages }})
-  </li>
-  {{ end }}
-</ul>
-
+      <main>
+        <h2 class="page-title">{{ .Title }}</h2>
+        <div class="cat-grid">
+          {{ range .Pages.ByTitle }}
+          <div class="cat-row" onclick="location.href='{{ .RelPermalink }}'">
+            <span class="cat-name">{{ .Title }}</span>
+            <span class="cat-desc"></span>
+            <span class="cat-count">{{ len .Pages }} {{ if eq (len .Pages) 1 }}post{{ else }}posts{{ end }}</span>
+          </div>
+          {{ end }}
+        </div>
+      </main>
 {{ partial "footer.html" . }}

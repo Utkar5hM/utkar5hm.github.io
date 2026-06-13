@@ -10,6 +10,4 @@ Hi There!!! I'm **Utkarsh**, an Applications Developer I at Oracle and a B.Tech 
 
 Welcome to my personal site, where I share my blogs and thoughts on technology, security, and more.
 
-<!-- To know more about me or connect with me, visit my [LinkedIn profile](https://www.linkedin.com/in/utkar5hm/). -->
-
-Reach Me: @[linkedIn](https://www.linkedin.com/in/utkar5hm/)
+reach me → [linkedin](https://www.linkedin.com/in/utkar5hm/) · [github](https://github.com/Utkar5hM)
