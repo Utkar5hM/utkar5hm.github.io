@@ -3,8 +3,6 @@ title: Portfolio
 author: Utkarsh M
 ---
 
-Applications Developer I at Oracle. I build systems close to the metal - MLOps pipelines, AI-powered workflows, and the occasional FPGA. [LinkedIn](https://www.linkedin.com/in/utkar5hm/) · [GitHub](https://github.com/Utkar5hM)
-
 ## Experience
 
 ### Applications Developer I · Oracle _(June 2024 - Present)_
@@ -52,7 +50,7 @@ A mobile + cloud platform to guide knee rehabilitation with daily tracking, anal
 - Designed a React Native (Expo) mobile app with 2D anatomical knee visualization using Three.js for intuitive symptom logging.
 - Integrated Apple HealthKit to sync steps, gait speed, sleep, and workouts, enabling data-driven recovery insights.
 - Implemented a phased exercise routine engine, pain trend analytics, and medication adherence tracking.
-- Shipped an MCP server enabling Claude AI to query and analyze a user's recovery data conversationally.
+- Shipped an MCP server enabling Claude AI to fully manage recovery programs conversationally: setting up workouts, daily routines, and medications, and analyzing progress, with no manual configuration required.
 
 **Tech:** Node.js, Express, TypeScript, React Native, Expo, SQLite, Docker, Caddy, Apple HealthKit, OAuth 2.1
 
