@@ -44,7 +44,7 @@ author: Utkarsh M
 
 ## Projects
 
-### Kneed - Knee Recovery Companion App _(2025 - Present)_ · AI Assisted
+### Kneed - Knee Recovery Companion App _(2025 - Present)_
 A mobile + cloud platform to guide knee rehabilitation with daily tracking, analytics, and AI-powered coaching.
 - Built a Node.js/Express REST API with OAuth 2.1, JWT sessions, and Apple Sign-In; secured with rate limiting, CORS, and Helmet.js.
 - Designed a React Native (Expo) mobile app with 2D anatomical knee visualization using Three.js for intuitive symptom logging.
@@ -56,7 +56,7 @@ A mobile + cloud platform to guide knee rehabilitation with daily tracking, anal
 
 ---
 
-### Clapped - Curated Learning Lists Platform _(2025)_ · AI Assisted
+### Clapped - Curated Learning Lists Platform _(2025)_
 A full-stack web app for creating, sharing, and progressing through curated video and note-based learning lists.
 - Architected SSR-first full-stack app with TanStack Start, file-based routing, and Nitro server runtime for fast page loads.
 - Built AI-powered note generation pipeline with Graphile Worker job queue, YouTube transcript extraction, and partial-result handling for resilient async processing.
@@ -70,7 +70,7 @@ A full-stack web app for creating, sharing, and progressing through curated vide
 
 ---
 
-### Total Overdose: RTX Remix _(2025)_ · AI Assisted
+### Total Overdose: RTX Remix _(2025)_
 Reverse-engineered the 2004 Direct3D 9 game *Total Overdose* to run under NVIDIA RTX Remix path tracing.
 - Authored a C++ D3D9 vtable hook (ASI shim) to resend camera transforms, redirect render targets, and shadow managed textures for valid Remix texture hashes.
 - Reverse-engineered game binary with Ghidra to locate skybox draw markers and HUD render calls, enabling correct sky/HUD separation in the path tracer.
