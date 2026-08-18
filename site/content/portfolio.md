@@ -5,15 +5,15 @@ author: Utkarsh M
 
 ## Experience
 
-### Applications Developer I · Oracle _(June 2024 - Present)_
+### Applications Solution Developer · Oracle _(June 2024 - Present)_
 - Cut manual document validation by **5-6K hours per year** by designing and deploying an AI-powered document validation workflow on OCI, automating **60%** of routine validations end-to-end.
 - Eliminated manual ML deployment hand-offs by building an MLOps pipeline on OCI Data Science with Kafka and Kubernetes, automating model promotion from training to production.
 - Built an A2A Gateway governing Fusion AI agent access from enterprise chat through rubric-based tiering, per-user RBAC, and audit logging.
-- Implemented Oracle User Assertion (JWT-bearer) grant in an agent-router service to invoke Fusion AI agents as the authenticated end user while preserving per-user RBAC.
+- Implemented Oracle Token Exchange grant in an agent-router service to invoke Fusion AI agents as the authenticated end user while preserving per-user RBAC.
 - Accelerated analyst workflows by building a summarization tool using LLaMA + RAG, reducing SME dependency for document-heavy processes.
 - Accelerated document-validation test generation by developing an MCP server that dynamically creates test documents from dashboard data and user inputs.
 - Reduced per-team integration overhead by shipping a reusable MCP server Docker base image that proxies services, handles OAuth 2.0 client-credentials auth, and self-registers with the MCP registry.
-- Received **5x Rock Star Gold Awards** for high-impact delivery and contributions across the OAL/SaaS organization.
+- Received **5x Rock Star Gold Awards** for high-impact delivery and contributions across the OCI/SaaS organization.
 
 ### Applications Developer Intern · Oracle _(May 2023 - Jul 2023, Remote)_
 - Developed an internal HR chatbot for the Oracle HCM platform by designing conversational workflows and implementing custom backend logic in asynchronous Node.js, improving employee access to HR services.
@@ -54,6 +54,8 @@ A mobile + cloud platform to guide knee rehabilitation with daily tracking, anal
 
 **Tech:** Node.js, Express, TypeScript, React Native, Expo, SQLite, Docker, Caddy, Apple HealthKit, OAuth 2.1
 
+[Live](https://kneed.utkar5hm.dedyn.io/)
+
 ---
 
 ### Clapped - Curated Learning Lists Platform _(2025)_
@@ -70,7 +72,7 @@ A full-stack web app for creating, sharing, and progressing through curated vide
 
 ---
 
-### Total Overdose: RTX Remix _(2025)_
+### Total Overdose: RTX Remix _(May 2025 - June 2025)_
 Reverse-engineered the 2004 Direct3D 9 game *Total Overdose* to run under NVIDIA RTX Remix path tracing.
 - Authored a C++ D3D9 vtable hook (ASI shim) to resend camera transforms, redirect render targets, and shadow managed textures for valid Remix texture hashes.
 - Reverse-engineered game binary with Ghidra to locate skybox draw markers and HUD render calls, enabling correct sky/HUD separation in the path tracer.
